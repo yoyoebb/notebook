@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>xjava</artifactId>
+        <groupId>com.ebb</groupId>
+        <version>1.0</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>dao</artifactId>
+
+    <name>dao</name>
+
+
+    <properties>
+        <!-- data base driver & orm-->
+        <v.postgresql>42.2.4</v.postgresql>
+        <v.org.mybatis>3.4.6</v.org.mybatis>
+        <v.alibaba.druid>1.1.10</v.alibaba.druid>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.ebb</groupId>
+            <artifactId>core</artifactId>
+            <version>1.0</version>
+        </dependency>
+
+        <!-- data base driver for postgresql. support jdbc4.2(required jvm 8)-->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>${v.postgresql}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis</artifactId>
+            <version>${v.org.mybatis}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid</artifactId>
+            <version>${v.alibaba.druid}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
+            <plugins>
+
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>

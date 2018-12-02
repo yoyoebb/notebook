@@ -1,0 +1,36 @@
+* HTTPS的由来
+    HTTP诞生以来，B/S应用种类越来越多，安全性要求也随之而来。但HTTP天生的缺陷(采用明文的形式传输数据、不能验证通信双方的身份、无法防止传输的数据被篡改)，信息安全得不到保障，为了解决这类需求，产生了HTTPS协议(HTTP + SSL)。
+
+    HTTPS默认端口是443，启用HTTPS的服务器需要向客户端提供安全证书。
+
+* SSL协议
+    SSL协议最初由Netscape公司提出，它具有以下特点：
+      + 身份验证机制：客户端向服务端索取CA证书(一般包含服务端身份信息及服务器公钥)，基于PKI机制校验证书有效性
+      + 密钥交换机制: 客户端使用服务端公钥加密(RSA)并发送premaster secret，服务端使用自己的私钥解密后计算出master secret，双方基于master secret计算真正的密钥
+      + 数据传输加密：基于上面的随机密钥，利用对称密钥算法(DES、3DES、AES等)对传输的数据进行加密
+      + 消息完整性验证：消息传输过程中使用MAC算法来检验消息的完整性
+
+    SSL协议位于应用层和传输层之间，它可以为任何基于TCP等可靠连接的应用层协议提供安全性保证。SSL协议本身分为两层:
+      + 上层协议
+        + SSL handshake protocol
+        + SSL change cipher spec protocol
+        + SSL alert protocol
+      + 底层协议 : SSL record protocol
+
+** SSL 握手过程
+    1. SSL客户端通过Client Hello消息将它支持的SSL版本、加密算法、密钥交换算法、MAC算法等信息发送给SSL服务器。
+
+    2. SSL服务器确定本次通信采用的SSL版本和加密套件，并通过Server Hello消息通知给SSL客户端。如果SSL服务器允许SSL客户端在以后的通信中重用本次会话，则SSL服务器会为本次会话分配会话ID，并通过Server Hello消息发送给SSL客户端。
+    3. SSL服务器将携带自己公钥信息的数字证书通过Certificate消息发送给SSL客户端。
+    4. SSL服务器发送Server Hello Done消息，通知SSL客户端版本和加密套件协商结束，开始进行密钥交换。
+
+    5. SSL客户端验证SSL服务器的证书合法后，利用证书中的公钥加密SSL客户端随机生成的premaster secret，并通过Client Key Exchange消息发送给SSL服务器。
+    6. SSL客户端发送Change Cipher Spec消息，通知SSL服务器后续报文将采用协商好的密钥和加密套件进行加密和MAC计算。
+    7. SSL客户端计算已交互的握手消息（除Change Cipher Spec消息外所有已交互的消息）的Hash值，利用协商好的密钥和加密套件处理Hash值（计算并添加MAC值、加密等），并通过Finished消息发送给SSL服务器。SSL服务器利用同样的方法计算已交互的握手消息的Hash值，并与Finished消息的解密结果比较，如果二者相同，且MAC值验证成功，则证明密钥和加密套件协商成功。
+
+    8. 同样地，SSL服务器发送Change Cipher Spec消息，通知SSL客户端后续报文将采用协商好的密钥和加密套件进行加密和MAC计算。
+    9. SSL服务器计算已交互的握手消息的Hash值，利用协商好的密钥和加密套件处理Hash值（计算并添加MAC值、加密等），并通过Finished消息发送给SSL客户端。SSL客户端利用同样的方法计算已交互的握手消息的Hash值，并与Finished消息的解密结果比较，如果二者相同，且MAC值验证成功，则证明密钥和加密套件协商成功。
+
+** Diffie-Hellman密钥交换算法
+
+

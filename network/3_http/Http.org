@@ -1,0 +1,85 @@
+#+SETUPFILE: ~/.emacs.d/org-templates/level-2.org
+#+TITLE: Http协议
+
+* 什么是Http协议？
+  Http协议是Hyper Text Transfer Protocol(超文本传输协议)的缩写，是用于客户端(浏览器)和WWW服务器进行通信的应用层协议，它基于TCP/IP来传递请求和响应数据，数据通常包括:html文件、图片、css、js、其他类型文件等。
+
+  #+BEGIN_QUOTE
+  Hypertext : 所谓超文本是指用超链接的方式，将各种不同空间的文字信息组织在一起的网状文本。目前使用最多的是HTML(Hyper Text Markup Language)和RTF(Rich Text Format)。
+  #+END_QUOTE
+
+  Http发展中出现了两个版本：HTTP/1.0和HTTP/1.1(目前主流)。
+
+** 工作原理
+  Http请求和响应的步骤如下图所示：
+
+   [[../../images/Basic/HTTP_PROTOCOL.png]]
+** 特点
+  标准的Http协议(不包含Cookie、Session)具有以下特点：
+  + 请求与响应 :: 客户端(浏览器)发送请求，服务器端响应请求并返回结果。
+  + 无连接 :: 无连接(短连接)的含义是指，每次请求都需要一次新的TCP连接，服务器响应客户的请求并返回结果后，会主动断开连接(HTTP/1.0)。这是基于HTTP应用的特性，往往客户端收到结果后，并不是立刻发起新的请求(可能在浏览页面、填写表单等)，也无法明确何时关闭连接，这种情况下如果服务器端保持长连接的话，压力会比较大(毕竟是N个客户端对应1个服务端)
+	   #+BEGIN_QUOTE
+	   随着互联网的发展，网站内容越来越丰富、复杂，往往一个HTML页面包含了N多其他资源(图片、CSS、JS...)，而每个资源请求都发起一个TCP连接的话，就会消耗大量的时间在TCP协议的握手、断开上，所以到了HTTP/1.1，提出了一个持久连接(HTTP keep-alive)的办法，只要任意一端没有明确提出断开连接，则保持TCP连接状态。在请求Header中的"Connection:keep-alive"即表明使用了持久连接。
+	   #+END_QUOTE
+  + 无状态 :: 无状态是指协议对于事务处理没有记忆能力。即Http协议没有规定怎么保存客户端与服务端交互过程中产生的临时会话数据。这是因为一开始，HTTP服务端通常仅仅提供新闻资讯服务，并不关心与客户端(浏览器)的互动。
+	   #+BEGIN_QUOTE
+	   随着网络时代的发展，B/S结构的应用(如社交网站、购物网站、企业级平台等)越来越多，服务端必须要保存用户状态，于是就产生了Cookie(在客户端保存数据)、Session(在服务器端保存数据)等Application机制，但协议本身仍然是无状态的。
+	   #+END_QUOTE
+  + 媒体独立 :: 只要客户端和服务器知道如何处理数据内容，任何类型的数据都可以通过HTTP发送。客户端和服务器负责指定合适的MIME-type内容类型。 
+** 主流的Http服务器
+  目前市场常见的Http服务器有：
+  + Apache服务器，开源社区
+  + IIS服务器(Internet Information Services)，微软
+  + Nginx服务器，俄罗斯
+
+  HTTP服务默认是80端口，但也可以改为8080或其他端口。
+
+* Http消息结构
+** Http请求报文
+  HTTP请求报文由请求行(request line)、报文头部(header)、空行和报文体(body)组成，如下图所示：
+
+   [[../../images/Basic/HTTP_REQUEST_MSG.png]]
+
+  目前主要的请求方法包括：GET、POST、[and PUT、DELETE for RESTful接口] 
+  + GET :: GET请求报文体一般为空，如果需要给服务器发送附带参数的话，可以在URL后面添加一个Query String。
+  + POST :: POST请求会在报文体附加额外的参数信息，范围由HTMP的Form元素限定 
+** Http响应报文
+  Http响应报文由状态行(status line)、报文头部(header)、空行和报文体(body)
+   [[../../images/Basic/HTTP_RESPONSE_MSG.png]]
+
+  HTTP状态码由三个十进制数字组成，百位数字用于指示类型：
+  #+CAPTION: HTTP状态码分类
+  | 分类 | 描述                           | 常用 |
+  |------+--------------------------------+------|
+  | <c>  | <30>                           | <c>  |
+  | 1**  | 信息，服务器收到请求，需要请求者继续执行操作 |      |
+  | 2**  | 成功，操作被成功接受不了并处理 | 200  |
+  | 3**  | 重定向，需要进一步操作以完成请求 |      |
+  | 4**  | 客户端错误，请求包含语法错误或无法完成请求 | 404  |
+  | 5**  | 服务器错误                     | 500  |
+** URI & URL
+* 附录
+** request method
+    #+CAPTION: Request Method
+    #+ATTR_HTML:    :class .tb2
+    | Method  | Desc                                                         |
+    |---------+--------------------------------------------------------------|
+    |         | <60>                                                         |
+    | GET     | 向服务器请求指定的资源。                                     |
+    | HEAD    | 类似于GET请求，只不过请求主要用于获取报头，不返回具体资源    |
+    | POST    | 在发送请求同时提交数据(如提交表单、文件上传)，数据被包含在请求体中。POST请求可能会导致新的资源的建立和/或已有资源的修改。 |
+    |---------+--------------------------------------------------------------|
+    | PUT     | 从客户端向服务器传送的数据取代指定的资源                     |
+    | DELETE  | 请求服务器删除指定资源                                       |
+    | OPTIONS | 允许客户端查看服务器的性能                                   |
+    | TRACE   | 回显服务器收到的请求，主要用于测试或诊断                     |
+    | CONNECT | HTTP/1.1协议中预留给能够将连接改为管道方式的代理服务器       |
+
+  + HTTP/1.0定义了三种请求方法： *GET* 、 *POST* 、HEAD
+  + HTTP/1.1定义了 *PUT* 、 *DELETE* 、OPTIONS、TRACE、CONNECT
+  + RESTful风格API使用GET(查询)、POST(新增)、PUT(修改)、DELETE(删除)来操纵资源
+#+TBLFM: 
+** request header
+** response status code
+** response header
+** content-type

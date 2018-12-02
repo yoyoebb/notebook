@@ -1,0 +1,279 @@
+* JDBC
+** history
+   JDBC是Java标准库中一套用于访问数据库的规范，它提供了标准化的接口(java.sql包下)并由DB供应商提供具体的驱动，来实现与具体数据库技术解耦(但要求使用标准SQL)。
+
+   它的版本历程如下：
+   + the first version was released in 1996, JDK1.1
+   + JDBC 2, as part of J2SE 1.2
+   + JDBC 3, in J2SE 1.4 & 5.0
+   + JDBC 4, in Java SE 6
+   + JDBC 4.1, in Java SE 7
+   + JDBC 4.2, in Java SE 8
+** Driver Type
+   JDBC规范将Driver分为以下几类(目前大部分driver都是type 3 or 4)：
+
+   + type 1 driver :: translates JDBC to ODBC and relies on an ODBC driver to communicate with the DB (已被废弃).
+   + type 2 driver :: is written partly in Java and partly in native code.(要求同时安装部分平台相关的客户端)
+   + type 3 driver :: 纯Java客户端，但使用DB无关的协议连接DB服务器组件，再由组件将协议转为DB依赖的协议与DB连接。
+   + type 4 driver :: 纯Java客户端，使用DB依赖的协议与DB连接 
+
+** Mapping DB Types & JAVA Types
+  常见的DB类型和Java类型映射关系：
+  | SQL Data Type                  | Java Data Type       |
+  |--------------------------------+----------------------|
+  | <30>                           | <20>                 |
+  | INTEGER or INT                 | int                  |
+  | SMALLINT                       | short                |
+  | NUMERIC(m,n) DEC(m,n)          | java.math.BigDecimal |
+  | FLOAT(n)   DOUBLE              | double               |
+  | REAL                           | float                |
+  | CHARACTER(n) CHAR(n)           | String               |
+  | VARCHAR(n)                     | String               |
+  | NCHAR(n)                       | String               |
+  | BOOLEAN                        | boolean              |
+  | DATE                           | java.sql.Date        |
+  | TIME                           | java.sql.Time        |
+  | TIMESTAMP                      | java.sql.Timestamp   |
+  | BLOB                           | java.sql.Blob        |
+  | CLOB                           | java.sql.Clob        |
+  | ARRAY                          | java.sql.Array       |
+  | ROWID                          | java.sql.RowId       |
+  | NCLOB                          | java.sql.NClob       |
+  | SQLXML                         | java.sql.SQLXML      |
+  |--------------------------------+----------------------|
+
+** 连接数据库
+  为了连接数据库，我们需要准备：
+  1. 特定DB的JDBC Driver
+  2. DB URL
+  3. 用户名和密码等认证信息
+
+  通常有以下几种方式注册驱动类：
+  + 程序中硬编码(不推荐)
+    #+BEGIN_SRC java
+    Class.forName("driver class")
+    #+END_SRC
+  + 设置系统参数 ~jdbc.driers~ (支持设置多个驱动，以':'隔开)
+    #+BEGIN_SRC java
+    // command parameter
+    java -Djdbc.drivers=org.postgresql.Driver
+
+    // or in code 
+    System.setProperty("jdbc.drivers", "org.postgresql.Driver") ;
+    #+END_SRC
+
+  驱动类成功加载后，我们可以通过DriverManager获取数据库连接。
+  #+BEGIN_SRC java
+    String url = "jdbc:postgresql:COREJAVA";
+    String username = "dbuser";
+    String password = "secret";
+    Connection conn = DriverManager.getConnection(url, username, password);
+  #+END_SRC
+** 执行SQL语句
+*** Statements
+  打开Conenction之后，我们可以利用Statement来执行具体的SQL语句:
+
+  + 执行非查询语句用createStatement()
+    #+BEGIN_SRC java
+      Statement stat = con.createStatement() ;
+
+      // 利用excuteUpdate()执行update/delete/insert/create...等SQL
+      // 返回被此SQL更改的rows count，如果没有row被更改则返回0
+      String command = "..." ;
+      int rows = stat.excuteUpdate(command) ;
+    #+END_SRC
+  + 执行查询语句则用executeQuery()
+    #+BEGIN_SRC java
+      // Select clause
+      String query = "..." ;
+      ResultSet rs = stat.executeQuery(query) ;
+
+      // 遍历ResultSet，注意与Iterator的区别
+      while(rs.next()){
+	  // look at a row of the result set, with two forms
+	  // by a index(start from 1, not 0)
+	  String isbn = rs.getString(1) ;
+	  // or by a column name
+	  String isbn = rs.getString("ISBN") ;
+      }
+    #+END_SRC
+
+  ResultSet提供了针对不同类型的get方法，同时如果方法类型与DB实际类型不符，get方法会自动进行合理的类型转换，如getString()将DB的浮点类型会转换为String类型并返回。
+
+  一个Connection可以打开多个Statement( ~DatabaseMetaData.getMaxStatement()~ 返回最多可以同时打开的Statement数量)，但一个Statement只能同时打开一个ResultSet。
+
+  当我们用完Connection、Statement、ResultSet时，需要及时将它们关闭，因为它们都是大对象，在数据库会占用很多资源。它们都有close方法，而且Connection.close()会自动关闭它的所有statement，Statment.close会自动关闭它打开的ResultSet。我们可以利用 try-with-resources 语句来简化编码：
+  #+BEGIN_SRC java
+    try(Connetion conn = getConnection() ;
+	Statement stat = conn.createStatement()){
+
+	try{
+	    String line = "..." ;
+	    boolean isResult = stat.execute(line) ;
+	    if(isResult){
+		try(ResultSet rs = stat.getResultSet()){
+		    ...
+		}
+	    }
+	}catch(SQLException ex){
+	    for(Throwable e : ex)
+		e.printStackTrace() ;
+	}
+    }catch(SQLException ex){
+	for(Throwable e : ex)
+	    e.printStackTrace() ;
+    }
+  #+END_SRC
+*** Prepared Statements
+  数据库在执行SQL时，会计算一个最优方案的执行计划，如果我们的SQL语句固定，仅仅是查询条件的值不同，这时我们可以让数据库对SQL进行预编译，预编译后的SQL，多次执行时会采取相同的执行计划，从而节省时间。
+
+  预编译SQL中，会采用host variables(在SQL中以'?'的形式站位)来替换不同的值。形如:
+  #+BEGIN_SRC sql
+    Select Books.Price, Books.Title
+    from Books, Publishers
+    where Books.Publisher_Id = Publishers.Publisher_Id
+      and Publishers.Name =?
+  #+END_SRC
+
+  为了执行预编译SQL，我们需要引入PreparedStatement类。
+  #+BEGIN_SRC java
+    // publisherQuery = 上面的预编译SQL
+    PreparedStatement stat = conn.prepareStatement(publisherQuery) ;
+
+    // 在执行预编译SQL前，我们需要给host variable赋值
+    // index是host variable在预编预SQL中的位置，从1开始
+    stat.setString(1, publisher) ;
+    ResultSet rs = stat.executeQuery() ;
+
+    // 预编译SQL也可以是update、delete、insert语句
+    int r = stat.executeUpdate() ;
+  #+END_SRC
+
+  对于动态SQL，我们应该尽量使用预编预SQL，而不是字符串拼接，这样可以有效地防范 *SQL注入攻击* 。
+*** Reading and Writing LOBs(BLOB、CLOB)
+  大多数DB都支持存储大数据对象LOB，又分为BLOB(图片、视频、音乐...)和CLOB(文本文件等)，我们可以通过JDBC读写LOB。
+  + read LOBs from DB
+    #+BEGIN_SRC java
+      String sql = "SELECT Cover FROM BookCovers WHERE ISBN=?" ;
+      PreparedStatement stat = conn.prepareStatement(sql) ;
+      ...;
+      stat.set(1, isbn) ;
+
+      try(ResultSet result = stat.executeQuery()){
+	  if(result.next){
+	      Blob coverBlob = result.getBlob(1) ;
+	      // Blob getBytes() or getBinaryStream()
+	      // Clob getSubString() or getCharacterStream()
+	      Image coverImage = ImageIO.read(coverBlob.getBinaryStream())
+	  }
+      }
+    #+END_SRC
+
+  + write LOBs to DB
+    #+BEGIN_SRC java
+      // Connection createBlob() or create Clob()
+      Blob coverBlob = conn.createBlob() ;
+      int offset = 0;
+      OutputStream out = coverBlob.setBinaryStream(offset);
+      ImageIO.write(coverImage, "PNG", out) ;
+
+      PreparedStatement stat=conn.prepareStatement("INSERT INTO Cover Values(?,?)");
+      stat.set(1, isbn);
+      stat.set(2, coverBlob);
+      stat.executeUpdate() ;
+    #+END_SRC
+*** TODO Multiple Results
+*** Retrieving Autogenerated keys
+  很多DB都支持自增长类型，它们往往被用作逻辑主键，我们在插入数据时它会自动+1。在JDBC中可以让我们获取插入数据时的主键值。
+  #+BEGIN_SRC java
+    stat.executeUpdate(insertStatement, Statement.RETURN_GENERATED_KEYS);
+    ResultSet rs = stat.getGeneratedKeys() ;
+    if(rs.next()){
+	int key = rs.getInt(1);
+    }
+  #+END_SRC
+
+  + Oracle一般使用自定义Sequence来做逻辑主键
+*** TODO Scrollable and Updatable Result Sets
+*** TODO Row Sets
+*** TODO Metadata
+*** Batch Updates
+  如果数据库支持，我们可以将多条DML(update/insert/delete)、DSL(create...)语句打包成一个批处理全量执行，这样可以显著提高效率。
+  #+BEGIN_SRC java
+    // 利用DatabaseMetaData.supportsBatchUpdates()可以知道DB是否支持批处理语句
+
+    Statement stat = conn.createStatement() ;
+    stat.addBatch(cmd1) ;
+    ... ;
+    int[] counts = stat.executebatch();
+  #+END_SRC
+
+** 处理事务(Transaction)
+  当把多条非查询SQL视作一个原子操作时，我们称它们在同一事务中(transaction)，在JDBC中，Connection默认是每条SQL都被视为一个独立事务提交，为了控制事务，我们可以:
+  #+BEGIN_SRC java
+    // 1. 关闭自动提交
+    conn.setAutoCommit(false) ;
+
+    try{
+	// 2. 执行多条SQL
+	stat.executeUpdate(sql1) ;
+	... ;
+
+	// 3a. 执行成功，提交事务
+	conn.commit() ;
+    }catch(SQLException ex){
+	// 3b. 任意SQL执行失败，回滚事务
+	conn.rollback() ;
+    }
+  #+END_SRC
+
+  如果数据库支持，我们也可以通过Savepoint来达到部分回滚的效果。
+
+* 原始JDBC在生产应用的不足和优化方向
+  1. 连接获取和释放
+  问题描述：数据库连接频繁的开启和关闭造成资源的浪费，影响系统的性能。
+  解决方案：可以使用数据库连接池来解决资源浪费的问题。通过连接池反复利用已经建立的连接去访问数据库，减少连接的开启和关闭。
+
+  主流的连接池有很多种(DBCP，Druid...)类似于JDBC，可以通过DataSource对各种连接池实现进行隔离解耦
+
+  2. SQL统一存取
+  问题描述：使用JDBC时，SQL语句分散到了代码中，导致：
+            + 可读性很差，不利于维护以及做性能调优
+            + 改动Java代码需要重新编译、打包部署
+            + 很多字符串拼接，不利于取出SQL在数据库客户端执行和调试
+  解决方案：将SQL语句以key-value的形式，统一放在配置文件或者数据库中，在项目启动时预加载
+
+  3. 传入参数映射和动态SQL
+  问题描述：当参数个数和组合不确定的时候(譬如个性化的查询)，怎么动态生成SQL？
+  解决方案：类似于代码的if语句，我们将条件的键值放在map中，然后在预定义的xml标记、指示符等标准语法中判断和引用，动态拼装SQL
+            由于占位符只能在查询条件中使用，为了灵活性，使用#key#来引用占位符变量，使用$key$来引用非占位符变量
+
+  4. 结果映射和结果缓存
+  问题描述：使用JDBC执行SQL后处理ReslutSet、释放资源等一整套操作繁琐又重复
+  解决方案：将流程封装为服务，告诉服务要执行的SQL(key)，以及想要的返回类型，中间流程都是服务自动处理
+            这就需要在配置中定义sql的返回结果集和服务返回类型进行映射
+
+  5. SQL重复
+  问题描述：几个功能的SQL语句其实都差不多，可能仅仅是SELECT部分、WHERE语句的不同，如果修改了表结构，就需要改多个地方，不利于维护
+  解决方案：将重复的SQL抽离成公共SQL，然后在功能SQL中进行引用
+
+  随着解决方案的完善，逐渐形成了ibatis这类优秀的轻量级orm映射框架
+
+* JDBC Driver & URL
+** Oracle
+
+** MySQL
+
+** Postgre SQL
+   1. jar 引用: 通过maven中央仓库查找"postgresql"
+      #+BEGIN_SRC xml
+        <!-- for java se 8, postgresql 10.4-->
+	<dependency>
+	    <groupId>org.postgresql</groupId>
+	    <artifactId>postgresql</artifactId>
+	    <version>42.2.4</version>
+	</dependency>
+      #+END_SRC
+   2. Driver Class : "org.postgresql.Driver"
+   3. database url : "jdbc:postgresql://<ip>:port/<schema>"
+      e.g. "jdbc:postgresql://127.0.0.1:5432/test"

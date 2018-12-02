@@ -1,0 +1,300 @@
+* Generic
+** Why Generic
+  Generic(范型)是从JSE 5开始引入，它有点类似于C++中的模版，其目的是在 复用针对不同类型的通用处理代码 的同时，加入 编译时类型检查 并减少 强制Cast 的使用。
+
+  这段话看起来有点绕，让我们通过例子来进一步解释：
+  #+BEGIN_SRC java
+  // before generic
+  public class ArrayList{
+      private Object[] elementData ;
+
+      ...
+      public Object get(int i){...}
+      public void add(Object o){...}
+  }
+  #+END_SRC
+  对于ArrayList而言，它并不关心存储的元素的具体类型，因此其所有操作都针对Object进行处理，但我们使用的时候，往往是针对某一具体类型，譬如当我们想要一个列表来处理String对象时，在取回对象时往往需要将其从 Object 转为 String； 另一个缺点就是，如果我们添加的不是String对象，编译器无法给出任何提示，只有在运行时才可以做类型判断，增加了异常处理的复杂度。
+
+  而有了Generic Class以后：
+  #+BEGIN_SRC java
+    // auto type check and cast
+    ArrayList<String> files = new ArrayList<>() ;
+    files.add(new String("aaa")) ;
+    String file = files.get(0) ;
+
+    // when use wrong type
+    files.add(new File("aaa")) ;    // compile error!
+  #+END_SRC
+** Generic Programming
+*** Declaring Type Variable(类型变量)
+  + Generic Class :: A generic class is a class with one or more type variables, like:
+    #+BEGIN_SRC java
+      // more type variables: Class<T,U...>
+      class Pair<T>{
+	  private T first ;
+	  private T second ;
+
+	  public Pair(){first==null; second==null;}
+	  public Pair(){T first, T second}{
+	      this.first = first ;
+	      this.second = second ;
+	  }
+
+	  public T getFirst(){return first;}
+	  public T getSecond(){return second;}
+
+	  public void setFirst(T newValue){first = newValue;}
+	  public void setSecond(T newValue){second = newValues;}
+      }
+    #+END_SRC
+
+    the rule of naming type variables:
+    + E for the element type of a collection
+    + K and V for key and value type of a map
+    + T,U,S... for any type at all.
+      
+  + Generic Method :: we can also define a single method with type parameters, like:
+    #+BEGIN_SRC java
+      class ArrayAlg{
+	  public static <T> T getMiddle(T... a){
+	      return a[a.length / 2];
+	  }
+      }
+    #+END_SRC
+  
+  + Bounds for Type Variables :: sometimes, we need do same special operators with type variables, then how can we konw the type support those operators? then we need narrow the type, e.g.
+    #+BEGIN_SRC java
+      class Pair <T extends Collection> ;
+
+      public static <T extends Comparable> T min(T[] a) ;
+
+      // also multiply bounds
+      T extends Comparable & Serializable ;
+      ... ;
+    #+END_SRC
+*** Instantiating Type Parameter(类型参数)
+  通过Generic Class or Generic Method声明了Type Variable后，就可以instantiating type parameter来使用它们, e.g
+  #+BEGIN_SRC java
+    // the way to use generic class
+    Pair<String> pair = new Pair<>() ;
+
+    // the way to use generic method
+    String middle = ArrayAlg.<String>getMiddle("John","Q","Public");
+    // or simple by omitting <String>
+    String middle = ArrayAlg.getMiddle("John","Q","Public");
+  #+END_SRC
+  使用简写形式call generic method时，针对基本数字类型，编译器也会有懵逼的时候：
+  #+BEGIN_EXAMPLE
+    double middle = ArrayAlg.getMiddle(3.14, 1729, 0) ;
+    // compile error
+    // compile会自动将3.14封包成Double，将1729, 0封包成Integer
+    // 然后针对范型方法，compile会寻找其共同的父类型:Number、Comparable，冲突
+    // 这种情况下我们需要显式指出范型类型
+    double middle = ArrayAlg.<Double>getMiddle(3.14, 1729, 0) ;
+  #+END_EXAMPLE
+
+*** Inheritance Rules & Wildcarc Types
+  Employee和Manager是继承关系，但在编辑器看来，Pair<Employee>和Pair<Manager>都是为raw Pair的子类型，它们彼此之间却没有任何关系。
+
+  假设某个字段或某个方法使用了Pair<Employee>，现在想让这个字段或方法同样支持Employee的子类(如：Pair<Manager>)，这时可以采用type通配符的方式来instantiating type parameter。
+
+  有三种通配形式：
+  + 向下通配(? extends base) :: 表示type parameter可以为base或其任意子类(顶为base class，底未知)，这时可以用base类型通配accessor method，但无法调用mutator method(null除外)
+  + 向上通配(? super base) :: 表示type parameter可以为base或其任意父类(顶为Object，底为base class)，这时可以用Object通配accessor method，用base类型调用mutator method(null同样)
+  + 原始通配(?) :: 表示type parameter可以为任意类型(顶为Object，底未知)，可以看为向下通配的特例(base == Object)
+  
+  #+BEGIN_SRC java
+    // ordinary method support Pair<Employee>
+    public staitc void testPair(Pair<Employee> p){
+	Employee first = p.getFirst() ;
+	p.setSecond(new Employee()) ;
+    }
+
+    // sub wildcard
+    public static void testPair(Pair<? extends Employee> p){
+	Employee first = p.getFirst() ;   // no problem
+	p.setFirst(new Employee()) ;      // Compile Error
+    }
+
+    // super wildcard
+    public static void testPair(Pair<? super Manager> p){
+	Object first = p.getFirst() ;   // no problem
+	p.setFirst(new Manager()) ;     // no problem
+    }
+
+    // unbounded wildcard
+    public static void testPair(Pair<?> p){
+	Object first = p.getFirst() ;   // no problem
+	p.setSecond(new Object) ;       // Compile Error
+    }
+    // 注意Pair<?>和Pair<T>的区别
+   #+END_SRC 
+
+** Generic Code and the Virtual Machine 
+  前面已经提过，generic仅仅是编译时行为，class文件、JVM中并没有Generic Class，里面的魔法是什么？
+*** the Magic of Generic
+  + Type Erasure :: 在编译的class文件里，所有的type variable都会被转义成raw type，没有被bound的type会转义成Object，而被bound的type则会转义成第1个对应的类型(同时在需要的地方进行其他类型Cast，所以为了效率一般会把标记接口放在后面).
+    #+BEGIN_SRC java
+      // Generic Class 
+      // Pair<T>
+      public class Pair{
+	  private Object first ;
+	  private Object second ;
+	  
+	  public Object getFirst(){return first ;}
+	  public void setFirst(Object newValue){first = newValue ;}
+	  ... ;
+      }
+
+      // Generic Class with bounds
+      // Interval <T extends Comparable & Serializable>
+      public class Interval{
+	  private Comparable lower ;
+	  private Comparable upper ;
+      }
+
+      // Generic Method with bounds
+      // public static <T extends Comparable> T min(T[] a)
+      public static Comparable min(Comparable[] a)
+    #+END_SRC
+
+  + Translating Generic Expressions :: 在调用范型方法的地方，自动调用raw method，并cast返回值.
+    #+BEGIN_SRC java
+      // Pair<Employee> buddies = new Pair<>(e1, e2) ;
+      // Employee buddy = buddies.getFirst() ;
+      // buddies.setSecond(buddy) ;
+      Pair buddies = new Pair(e1,e2) ;    // auto-cast to Object
+      Employee buddy = (Employee)buddies.getFirst() ;
+      buddies.setSecond(buddy) ;          // auto-cast to Object
+    #+END_SRC
+
+*** Calling Legacy Code
+  正常来说，新的代码我们都会尽量使用Generic type，但很多时候我们需要混合使用Raw type和Generic type，如为了复用老版本的代码，这个时候编译器会产生warning警告。
+    #+BEGIN_SRC java
+      // a legacy method with raw type parameter, return value
+      void setLabelTable(Dictionary table) ;
+      Dictionary getLabelTalbe() ;
+
+      // mix raw & generic type
+      Dictionary<Integer,Component> labelTable = ... ;
+      setLabelTable(labelTable) ;     // warning
+      labelTable = getLabelTalbe() ;  // warning
+    #+END_SRC
+    这时我们要确保，legacy method可以正常的支持指定类型后的范型变量(不支持可能会在运行时抛Cast异常)，如果你确保代码没问题，想取消警告，这时可以使用注解： ~@SuppressWarning~ 。
+    #+BEGIN_SRC java
+    // 这个注解支持local variable、method
+    @SuppressWarning("unchecked")
+    Dictionary<Integer,Component> labeltable = getLabeltalbe() ;
+    #+END_SRC
+  
+*** the Bridge Method
+  范型和继承组合后会产生一些奇妙的东西，让我们先看一个例子：
+  #+BEGIN_SRC java
+    public class HelloWorldTest{
+	public static void main(String[] args) {
+	    superHelloWorld hw = new HelloWorld() ;
+	    hw.sayHello("name");    // HelloWorld
+	}
+    }
+
+    class HelloWorld extends superHelloWorld<String>{
+	public void sayHello(String name){
+	    out.println("HelloWorld!");
+	}
+    }
+
+    class superHelloWorld <T>{
+        // after type erasure，only sayHello(Object o)
+	public void sayHello(T t){
+	    out.println("superHelloWorld!");
+	}
+    }
+  #+END_SRC
+  我们知道，经过类型搽除后，superHelloWorld只有sayHello(Object)这个raw method，而HelloWorld存在 1.继承的sayHello(Object); 2.自定义的sayHello(String) 方法，两个方法签名并不相同，看起来不是override而是overload，但是运行时依然体现出多态性。其原因在于，编译时系统会给HelloWorld自动添加一个sayHello(Object)的方法，并且在方法体内调用sayHello(String)。这个自动生成的syaHello(Object)就称之为Bridge Method
+  
+*** Method Clashes
+  由于类型搽除的缘故，当我们将父类中参数为Object的方法，在子类中替换为type variable时;或者子类父类分别实现相同范型接口不同类型参数时，编译器会提示method clashes，如：
+  #+BEGIN_SRC java
+    // 用类型变量替代父类中的Object参数
+    public boolean eaquals(T value){
+	return first.equals(value) && second.equals(value) ; // Compile Error
+    }
+
+    // 子类和父类分别实现不同类型参数相同范型接口
+    class Employee implements Comparable<Employee>{...}
+    class Manager implements Comparable<Manager>{...}        // Compile Error
+  #+END_SRC
+** Restrictions and Limitations
+  使用Generic的过程中有这些限制：
+    1. You Cannot Instantiate Type Variables
+       #+BEGIN_SRC java
+	 // 我们不能直接new 一个范型对象
+	 public Pair(){first = new T(); second = new T();} // Compile Error
+
+	 // 变通的做法是提供专门的工厂方法并利用Class
+	 public static <T> Pair<T> makePair(Class<T> cl){
+	     try{
+		 return new Pair<>(cl.newInstance(), cl.newInstance());
+	     }catch(Exception ex){return null ;}
+	 }
+
+	 Pair<String> p = Pair.makePair(String.class) ;
+	 // 还不如使用 Pair<String> p = new Pair<String>(String, String) ;
+       #+END_SRC
+    2. Type Parameters Cannot Be Instantiated with Primitive Types
+    3. Type Variables Are Not Valid in Static Contexts of Generic Classes
+       #+BEGIN_SRC java
+	 class Example<T>{
+	     private static T f1 ;         // Compile Error
+	     public static T getField() ;  // Compile Error
+	 }
+       #+END_SRC
+    4. 可以 申明 或 获取 参数实例化的范型类数组，但无法主动实例化(new)
+       #+BEGIN_SRC java
+	 // you can declare a array variable of Generic Class
+	 Pair<String>[] strPair ;
+	 // but you can't initialize it
+	 strPair = new Pair<String>[10] ;     // Compile Error
+
+	 // 因为初始化后的Array在Heap中为指定类型，如：
+	 String[] strAry = new String[10] ;
+	 Object[] objAry = strAry ;    // no problem
+	 objAry[0] = new Integer(1) ;  // Runtime Error : ArrayStoreException
+
+	 // 而Generic的类型搽除会导致运行时跳过ArrayStoreException，这并不安全
+	 // 应该使用ArrayList替代数组存储Generic Class，它更安全有效
+        #+END_SRC
+    5. Varargs Warnings
+       #+BEGIN_SRC java
+	 // 我们知道，方法的可变参在运行时实际上时转化成了数组
+	 public static <T> void addAll(Collection<T> coll, T... ts){
+	     for ( t : ts) coll.add(t) ;
+	 }
+
+	 // 考虑以下场景
+	 Collection<Pair<String>> table = ... ;
+	 Pair<String> pair1 = ... ;
+	 Pair<String> pair2 = ... ;
+	 addAll(table,pair1,pair2) ;
+	 // JVM必须得创建一个包含Pair<String>的数组，看起来违反了上一条rule
+	 // 但这时规则会放宽，并不会产生Compile Error，而是一个Warning
+	 // 可以用 @SuppressWarning注解 或 @SafeVarargs注解(JSE 7) 来消除Warining 
+        #+END_SRC
+    6. Runtime Type Inquiry Only Works with Raw Types
+       #+BEGIN_SRC java
+	 // instanceof only support raw type
+	 if (a instanceof Pair<String>)   // Compile Error
+	 if (a instanceof Pair<T>)        // Compile Error 
+
+	 // cast
+	 Pair<String> p = (Pair<String>) a ;  // Compile Warning
+
+	 // getClass() return with raw type
+	 Pair<String> strPair = ... ;
+	 Pair<Employee> empPair = ... ;
+	 if (strPair.getClass() == empPair.getClass())   // true, them are both Pair
+       #+END_SRC
+    7. You Cannot Throw or Catch Instances of a Generic Class
+    8. You Can Defeat Checked Exception Checking
+    9. 
+  

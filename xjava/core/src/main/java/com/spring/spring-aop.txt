@@ -1,0 +1,151 @@
+﻿Q: Spring AOP 2.0
+A: 
+Spring AOP的目标是配合Ioc容器使用，主要拦截方法执行，并且以"非侵入性为目标"，如果需要细粒度的拦截，可以考虑AspectJ。
+Spring框架给用户充分的自由去选择：
+1. Spring AOP or AspectJ
+2. schema-based approach or the @AspectJ annotation style
+
+Q: AOP concept
+A:
+1. Aspect 
+A modularization of a concern that cuts across multiple objects. (like Transaction Management)
+
+2. Join point: 
+A point during the execution of a program, such as the execution of a method or the handling of an exception. 
+In Spring AOP, a join point always represents a method execution. 
+
+3. Advice
+Action taken by an aspect at a particular join point. 
+Different types of advice include "around," "before" and "after" advice. 
+Many AOP frameworks, including Spring, model an advice as an interceptor, maintaining a chain of interceptors "around" the join point.
+
+4. Pointcut
+A predicate that matches join points. 
+Advice is associated with a pointcut expression and runs at any join point matched by the pointcut (for example, the execution of a method with a certain name). 
+The concept of join points as matched by pointcut expressions is central to AOP: Spring uses the AspectJ pointcut language by default.
+
+5. Introduction (Also known as an inter-type declaration)
+Declaring additional methods or fields on behalf of a type. 
+Spring AOP allows you to introduce new interfaces (and a corresponding implementation) to any proxied object. 
+For example, you could use an introduction to make a bean implement an IsModified interface, to simplify caching.
+
+6. Target object: 
+Object being advised by one or more aspects. Also referred to as the advised object. 
+Since Spring AOP is implemented using runtime proxies, this object will always be a proxied object.
+
+7. AOP proxy: 
+An object created by the AOP framework in order to implement the aspect contracts (advise method executions and so on). 
+In the Spring Framework, an AOP proxy will be a JDK dynamic proxy or a CGLIB proxy. 
+Proxy creation is transparent to users of the schema-based and @AspectJ styles of aspect declaration introduced in Spring 2.0.
+
+8. Weaving: 
+Linking aspects with other application types or objects to create an advised object. 
+This can be done at compile time (using the AspectJ compiler, for example), load time, or at runtime. 
+Spring AOP, like other pure Java AOP frameworks, performs weaving at runtime.
+
+
+Q: Type of Advice
+A:
+1. Before advice
+Advice that executes before a join point, but which does not have the ability to prevent execution flow proceeding to the join point (unless it throws an exception).
+2. After returning advice
+Advice to be executed after a join point completes normally: for example, if a method returns without throwing an exception
+3. After throwing advice
+Advice to be executed if a method exits by throwing an exception
+4. After (finally) advice
+Advice to be executed regardless of the means by which a join point exits (normal or exceptional return)
+5. Around advice
+Advice that surrounds a join point such as a method invocation. This is the most powerful kind of advice. Around advice can perform custom behavior before and after the method invocation. 
+It is also responsible for choosing whether to proceed to the join point or to shortcut the advised method execution by returning its own return value or throwing an exception
+
+使用Advice的原则是，用刚好符合要求的advice，避免引入额外的复杂性
+
+
+Q: @AspectJ的使用
+A:
+通过AspectJ注解来使用AOP，需要
+1. 在beans中打开<aop:aspectj-autoproxy/>
+2. 引入AspectJ依赖：aspectjweaver.jar，aspectjrt.jar
+
+1. 声明Aspect类
+package org.xyz;
+import org.aspectj.lang.annotation.Aspect;
+@Aspect
+public class NotVeryUsefulAspect {
+}
+
+常规配置被注解的bean
+<bean id="myAspect" class="org.xyz.NotVeryUsefulAspect">
+<!-- configure properties of aspect here as normal -->
+</bean>
+
+2. 声明pointcut(Spring AOP只支持execution)
+@Pointcut("execution(* transfer(..))")// the pointcut expression
+private void anyOldTransfer() {}// the pointcut signature, must return void
+...
+...
+...
+
+
+Q: schema-based approach
+A: 
+1. 声明Aspect(通过ref引用normal bean)
+<aop:config>
+	<aop:aspect id="myAspect" ref="aBean">
+		...
+	</aop:aspect>
+</aop:config>
+<bean id="aBean" class="...">
+...
+</bean>
+
+2. 声明pointcut(表达式沿用AspectJ)
+<aop:config>
+	<aop:pointcut id="businessService" expression="execution(* com.xyz.myapp.service.*.*(..))"/>
+</aop:config>
+
+3. 声明advice
+<aop:aspect id="..." ref="...">
+	<!--引用外部pointcut-->
+	<aop:before pointcut-ref="dataAccessOperation" method="doAccessCheck"/>
+	<!--内部声明pointcut，其他类型advice同样支持-->
+	<aop:before pointcut="execution(* com.xyz.myapp.dao.*.*(..))" method="doAccessCheck"/>
+	<!--以上同样适用于aop:after-returning、aop:after-throwing、aop:after、aop:around-->
+	
+	<aop:after-returning pointcut-ref="dataAccessOperation" returning="retVal" method="doAccessCheck"/>
+	<aop:after-throwing pointcut-ref="dataAccessOperation" throwing="dataAccessEx" method="doRecoveryActions"/>
+
+	<aop:around pointcut-ref="businessService" method="doBasicProfiling"/>
+</aop:aspect>
+
+对于aop:around,第一个参数必须是ProceedingJoinPoint
+public Object doBasicProfiling(ProceedingJoinPoint pjp) throws Throwable {
+	// start stopwatch
+	Object retVal = pjp.proceed();
+	// stop stopwatch
+	return retVal;
+}
+
+可以在pointcut中指定方法参数、注解...，并将其传给advice method
+<aop:before pointcut=".xyz.myapp.SystemArchitecture.dataAccessOperation() and args(account,..)" method="validateAccount" arg-names="account"/>
+<aop:before pointcut="com.xyz.lib.Pointcuts.anyPublicMethod() and @annotation(auditable)" method="audit" arg-names="auditable"/>
+
+4. 声明advisor
+advisor是Spring独创术语，用于绑定pointcut和一些预定义的aspect(特定的bean并实现某种advice)，如事务处理
+<aop:config>
+	<aop:pointcut id="businessService" expression="execution(* com.xyz.myapp.service.*.*(..))"/>
+	<!-- 也可以用 inner pointcut-->
+	<aop:advisor pointcut-ref="businessService" advice-ref="tx-advice"/>
+</aop:config>
+<tx:advice id="tx-advice">
+	<tx:attributes>
+		<tx:method name="*" propagation="REQUIRED"/>
+	</tx:attributes>
+</tx:advice>
+
+
+
+
+Q: 多个aspect的顺序
+A: 
+

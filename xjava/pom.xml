@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>notebook</artifactId>
+        <groupId>com.ebb</groupId>
+        <version>1.0</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>xjava</artifactId>
+    <packaging>pom</packaging>
+
+    <name>xjava</name>
+    <!-- FIXME change it to the project's website -->
+    <url>http://www.example.com</url>
+    <modules>
+        <module>core</module>
+        <module>web</module>
+        <module>dao</module>
+    </modules>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+
+        <!-- logging -->
+        <v.org.slf4j>1.7.25</v.org.slf4j>
+        <v.ch.qos.logback.classic>1.2.3</v.ch.qos.logback.classic>
+
+        <!-- apache -->
+        <v.apache.commons.lang3>3.7</v.apache.commons.lang3>
+        <v.apache.commons.codec>1.11</v.apache.commons.codec>
+    </properties>
+
+    <dependencies>
+        <!-- slf4j 日志门面-->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${v.org.slf4j}</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${v.ch.qos.logback.classic}</version>
+        </dependency>
+
+        <!-- apache commons -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${v.apache.commons.lang3}</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>${v.apache.commons.codec}</version>
+        </dependency>
+
+    </dependencies>
+</project>

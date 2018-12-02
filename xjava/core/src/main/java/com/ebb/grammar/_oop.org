@@ -1,0 +1,244 @@
+* relationship
+** inheritance (is a)
+    在设计的类的时候会发现，一些类和类之间具有天然的包含关系，如“Employee"可以细分"Manager"、"Engineer"...，这时可以使用继承关系。
+    #+BEGIN_SRC java
+      public class Manager extends Employee{
+	private double bonus ;
+	...
+	public void setBonus(double bonus){
+	  this.bonus = bonus ;
+	}
+
+	@Override
+	public double getSalary(){
+	  // 通过super.xxx()调用父类方法
+	  double baseSalary = super.getSalary() ;  
+	  return baseSalary + bonus ;
+	}
+      }
+    #+END_SRC
+
+    子类可以继承父类的属性和方法(受访问修饰符限制)，可以定义自己的属性、方法、构造方法，还可以override父类的方法。
+
+    子类无法继承父类的private field 和 private method(这里的继承理解为在子类中或通过子类引用直接访问，实际上创建子类对象时，父类的private field同样在子类对象内存中进行了初始化)，但可以通过继承自父类的方法来间接 修改子类对象内存中的父类private field 或 调用父类的private method。
+
+*** override & overload & method binding
+    override : 复写父类方法(static、final、private方法除外)
+    + 方法名、参数、返回值相同，(JSE 5.0 复写时返回值可以为子类)
+    + 访问修饰符范围不能变小
+    + 抛出的异常不能变多
+    + 可以通过@Override注释来告诉编辑器，防止误写成overload (JSE 5.0)
+
+    overload : 方法重载(包括本类和可继承的父类方法)
+    + 参数类型、个数、顺序至少有一项不相同
+    + 不能通过访问权限、返回类型、抛出的异常的不同来重载方法，因为JVM无法判断该调用哪个方法
+
+    method binding : 由于override和overload的存在，JVM是如何确定调用哪个class的哪个方法呢？这涉及到两个概念：static binding、dynamic binding
+    + static binding : 所谓静态绑定，就是编译时就能够确定调用的是哪个类的哪个方法，这种方法包括：static method、private method、final method
+    + dynamic binding : 对于其他方法，JVM会在运行时，根据引用类型来确定方法匹配的范围，根据对象类型及继承链中override的情况来决定实际调用的class方法
+    #+BEGIN_SRC java
+    public class A{
+      public String show(D obj){return "A and D" ;}
+      public String show(A obj){return "A and A" ;}
+    }
+
+    public class B extends A{
+      public String show(B ojb){return "B and B" ;}
+      public String show(A obj){return "B and A" ;}
+    }
+
+    public class C extends B{}
+     
+    public class D extends B{}
+
+    public class Test{
+      public static void main(String[] args){
+        A a1 = new A() ;
+	A a2 = new B() ;
+	B b = new B() ;
+
+	System.out.println("1--" + a1.show(new B())) ;
+	System.out.println("2--" + a1.show(new C())) ;
+	System.out.println("3--" + a1.show(new D())) ;
+	// a1为A类型 继承自Object，方法范围可以限定show(D)和show(A)
+	// 其对象为A类型，也只实现了show(D)和show(A)
+	// 1-- a1.show(B) == show((A)B) == A.show((A)B), result: A and A
+	// 2-- a1.show(C) == show((A)C) == A.show((A)C), result: A and A
+	// 3-- a1.show(D) == show(D) == A.show(D),       result: A and D  
+
+	System.out.println("4--" + a2.show(new B())) ;
+	System.out.println("5--" + a2.show(new C())) ;
+	System.out.println("6--" + a2.show(new D())) ;
+	// a2为A类型 继承自Object，方法范围可以限定show(D)和show(A)
+	// 其对象为B类型，override了show(A)
+	// 4-- a2.show(B) == show((A)B) == B.show((A)B), result: B and A
+	// 5-- a2.show(C) == show((A)C) == B.show((A)C), result: B and A
+	// 6-- a2.show(D) == show(D) == A.show(D),       result: A and D
+	 
+	System.out.println("7--" + b.show(new B())) ;
+	System.out.println("8--" + b.show(new C())) ;
+	System.out.println("9--" + b.show(new D())) ;
+	// b为B类型，继承自A，方法范围可以限定B.show(B)，B.show(A)，A.show(D)
+	// 其对象为B类型，override了show(A)
+	// 7-- b.show(B) == show(B) == B.show(B),        result: B and B
+	// 8-- b.show(C) == show((B)C) == B.show(B),     result: B and B
+	// 9-- b.show(D) == show(D) == A.show(D),        result: A and D
+
+	// 特别注意第8点，show(C)符合show(B)、show(A)，但基于类型转换的最短路径，最终匹配的是show(B)
+      }
+    }
+    #+END_SRC
+*** init & clean up
+    init
+    + class装载 :: class会在第一次使用时被ClassLoader装载，装载时按继承链从顶往下装载涉及到的所有class，装载时按照源码中的声明顺序，初始化其static field，执行static代码块。(class信息保存在 Method Area-方法区)
+    + object初始化 :: new 一个类的实例时发生，按照继承链从顶往下初始化其member field，执行非static代码块，执行对应的Constructor方法。(对象保存在heap-堆区)
+   
+    clean up
+    + 当Heap中的对象没有有效引用时，JVM会通过 GC-垃圾回收 来销毁对象回收内存，在销毁对象前，会调用其finalize()方法，但JVM执行GC的时间是不可控的。
+    + 必须要释放的资源，可以在必要时通过try...finally块进行释放
+
+** java.lang.Object
+Java中只允许单根继承，所有的类都隐式继承自一个根父类: java.lang.Object。在Object类中，申明了一些最基础的公用方法，它们包括：
+| protected | Object clone()                | get copy of this object          |
+| public    | boolean equals(Object object) | test if two objects are equal    |
+| public    | int hashCode()                | get hashCode of this object      |
+| public    | String toString()             | a string representing the object |
+| public    | Class<?> getClass()           | return the Class of this object  |
+| protected | void finalize()               | be called by GC when destruction |
+这些方法在Object中都有默认实现，但对于很多class，默认实现并不是我们想要的效果，这时我们需要去override对应的方法。
+
+另外还有下面这些方法，主要用于多线程环境，这里不展开，在后面的多线程编程时会详细讲解。
+| public | void wait()                        |
+| public | void wait(long timeout)            |
+| public | void wait(long timeout, int nanos) |
+| public | void notify()                      |
+| public | voide notifyAll()                  |
+
+*** equals
+  很多时候，我们需要判断两个对象是否相同，有时候甚至还要比较大小(用于判断、排序...)，Object.equals() 方法的默认实现和引用类型的 ~==~ 操作效果一致，就是比较两个对象的内存地址是否相同。但是对于有状态的class，如之前的Employee，这种比较方式显然不适合。
+
+  让我们通过Employee来示范如何override Object.equals()
+  #+BEGIN_SRC java
+  public class Employee{
+    ...
+  
+    @Override
+    public boolean equals(Object obj){
+      // a quick test to see if the objects are identical
+      if (this == other) return true ;
+    
+      // test where other is null or not the same Class
+      if (other == null || getClass() != obj.getClass()) return false ;
+
+      Employee other = (Employee)obj ;
+     
+      // test each stateful field are identical
+      // if extends from a superClass, use super.equals(obj) first
+      return name.equals(other.name) 
+          && salary == other.salary
+	  && hireDay.equals(other.hireDay) ;
+    }
+  }
+  #+END_SRC
+  很多程序员喜欢用 ~if(!obj instanceof Employee)~ 来判断比较对象是否为相同类型，这样虽然可以覆盖其子类，但是违反了Java规范中对于equals的要求: ~x.equals(y) == y.equals(x)~
+
+  实际应用中的做法是，我们会为Employe引入一个唯一的ID字段，并通过比较ID来判断两个Emplyee对象是否相同，这个时候我们可以采用instanceof判断类型，同时也要把equals方法声明为final。
+
+  如果你是在子类中定义equals方法，在定义自己的equals规则前，最好先调用 ~super.equals(obj)~ 。
+
+  标准库中为很多类提供了个性化的equals方法，常见的有以下几类：
+  + 基本类型的包装类
+  + 字符串
+  + 日期
+  + 集合
+  + 数组(使用java.util.Arrays的静态方法equals())
+
+  java.util.Objects是一个通用的Object工具类，它提供了一系列的静态实用方法，而且是空指针安全(null-safe)，用于计算对象的hashCode、返回对象的字符串、比较两个对象等。(JSE7.0)
+  #+BEGIN_SRC java
+  // 防止field的值为null
+  return Objects.equals(name,other.name)
+      && salary == other.salary
+      && Objects.equals(other.hireDay) ;
+  #+END_SRC
+*** hashCode
+  hashCode方法返回一个代表该对象的int类型哈希值，主要用于哈希表存储对象时决定其在数组中的位置。Object类的默认实现是返回对象的内存地址，我们在override该方法时，有一个原则：如果 ~x.equals(y)==true~ ，那么 ~x.hashCode()==y.hashCode()~ ，这样可以提高哈希表的散列效率和准确性。
+
+  譬如在标准库中，String类override了equals和hashCode，而StringBuilder没有。
+  #+BEGIN_SRC java
+  public static void main(String[] args){
+    String s = "OK" ;
+    StringBuilder sb = new StringBuilder(s);
+    out.println(s.hashCode()) ;    //2556
+    out.println(sb.hashCode()) ;   //20526976
+
+    String t = new String("OK") ;
+    StringBuilder tb = new StringBuilder(t);
+    out.println(t.hashCode()) ;    //2556
+    out.println(tb.hashCode()) ;   //20527144
+
+    out.println(sb.equals(tb));    //false
+  }
+  #+END_SRC
+
+  如果要override hashCode方法，一个比较好的做法是利用有状态field的hashCode。仍然以Employee为例：
+  #+BEGIN_SRC java
+  @Override
+  public int hashCode(){
+    // 利用Objects.hashCode()来防止Null异常,当参数为null时，返回0
+    return 7*Objects.hashCode(name)
+        + 11*Double.hashCode(salary)
+	+ 13*Objects.hashCode(hireDay) ;
+  }
+  #+END_SRC
+  更好的做法：
+  #+BEGIN_SRC java
+  @Override public int hashCode(){
+    // Objects.hash(Object... values)
+    return Objects.hash(name,salary,hireDay);
+  }
+  #+END_SRC
+*** toString
+  toString()方法返回一个代表该对象的字符串，当我们将对象和一个字符串相加时，编译器会默认调用此方法。它也是日志记录时常用的工具，可以让我们基于日志内容进行分析、排错。
+
+  Object类的默认实现是:
+  #+BEGIN_EXAMPLE
+  getClass().getName() + '@' + Integer.toHexString(hashCode())
+  #+END_EXAMPLE
+  在标准库中，override toString时遵循的原则：
+  #+BEGIN_EXAMPLE
+  //superClass
+  getClass().getName() + "[field1=" + field1 + ",field2=" + ... + "]" ;
+  //subClass
+  super.toString() + "[subField1=" + subField1 + ... + "]" ;
+  #+END_EXAMPLE
+*** clone
+  clone方法是java提供的用于复制对象的手段，但Object中定义为protected，返回值为Object，其实现为native方法。如果在class内部直接调用它，会抛出 ~CloneNotSupportedException~ ，为了正确克隆对象，我们需要做的是：
+    1. 实现 ~java.lang.Clonable~ 接口，这是一个标记接口，没有定义任何方法，然后我们就可以在class内部调用clone()方法
+    2. 如果我们想在C2类中调用C1.clone()，需要override clone()并把访问修饰符设为public，同时可以把返回值设置为C1方便使用
+
+  clone的默认实现是shallow clone，对于成员变量中的基本数据类型会复制值，引用类型会复制引用地址，当成员变量为引用类型且对象为mutable时，这种做法是不安全的，此时我们需要实现 deep clone
+    #+BEGIN_SRC java
+    // shallow clone
+    public class C1 implements Cloneable{
+        String name = new String("ebb") ;
+           
+        @Override
+	public C1 clone() throws CloneNotsupportedexception{
+	    return (C1)super.clone() ;
+	}
+    }
+
+    // deep clone
+    public class C2 implements Cloneable{
+        String c1 = new C1() ;
+           
+        @Override
+	public C2 clone() throws CloneNotsupportedexception{
+	    C2 newObj = (C2)super.clone() ;
+	    newObj.c1 = c1.clone() ;
+	    return newObj ;
+	}
+    }
+    #+END_SRC
+
+  在class中override clone方法并不是一个常见的做法，事实上，在标准库中只有不到5%的class提供了克隆方法，有人认为，比起使用clone方法的诸多不便，还不如使用额外的方法来达到同样的目的。

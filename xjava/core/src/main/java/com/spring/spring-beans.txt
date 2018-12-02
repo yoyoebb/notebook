@@ -1,0 +1,812 @@
+﻿BeanDefinition
+	class
+	id and name
+	scope:singleton or prototype	
+
+	constructor arguments
+	properties
+
+	autowiring mode
+	dependency checking mode
+	lazy-initialization mode
+
+	initialization method
+	destruction method
+
+
+Q: 如何不通过bean definition往factory添加bean?
+A: DefaultListableBeanFactory.registerSingleton(..)
+
+
+Q: bean naming conventions
+A: like java field conventions，以小写字母开头，驼峰式(etc,"accountManager")
+采用"id" or "name"属性来命名bean
+id - 唯一标识，推荐用法，采用xml标准id规范来命名
+name - 当命名违反了xml id规范的时，可以声明成name，如果存在id，name可以用来声明别名，多个别名以空格(space)、逗号(commas)、分号(semi-colons)
+null - 如果id和name都没定义，以class的值作为bean name，如果已经存在同名bean，name变为"class"+"#n"(2,3,4,5...)
+
+
+Q: 怎么声明一个bean为static inner class类型
+A: 采用编译后的内部名称，如：class="com.example.Foo$Bar"
+
+
+Q: 指定bean的实例化方式
+A: 
+1. 使用构造方法实例化bean(最常见)
+<bean id="exampleBean" class="examples.ExampleBean"/>
+2. 使用static factory-method实例化bean (返回的bean类型可以不是examples.ExampleBean2)
+<bean id="exampleBean" class="examples.ExampleBean2" factory-method="createInstance"/>
+3. 使用instance factory method，target bean的class属性必须为空
+<!-- the factory bean, which contains a method called createInstance() -->
+<bean id="myFactoryBean" class="...">
+...
+</bean>
+<!-- the bean to be created via the factory bean -->
+<bean id="exampleBean" factory-bean="myFactoryBean" factory-method="createInstance"/>
+
+
+BeanFactory
+	boolean containsBean(String name)
+	Object getBean(String name)
+	Object getBean(String name, Class clazz)          在return bean之前会根据clazz进行类型转换
+	Class getType(String name)
+	boolean isSingleton(String name)
+	String[] getAliases(String name)
+
+	Object getBean(String name, Object[] args)        2.5
+
+
+Q: Dependency Injection (DI)的方式，底层(BeanDefinition & PropertyEditor)
+A: 
+1. Constructor DI
+   在bean实例化的同时，传入依赖bean。 (很多遗留bean没有定义setter方法，只能采用Constructor DI)
+   如果beanA、beanB互为Constructor DI，容器会抛出异常，解决方案是改为Setter-based DI
+
+2. Setter-based DI 	
+   在bean实例化之后，传入依赖bean。 (推荐做法)
+BeanFacory创建的时候会验证bean definition及其依赖的bean definition是否有效
+但bean只会在需要的时候被创建和注入依赖(Constructor DI or Setter-based DI)
+ApplicationContext会在初始化阶段就创建好singleton bean及其依赖bean （pre-instantiate）
+好处：
+a. 提前暴露错误
+b. 将创建bean的开销放在启动阶段而不是运行阶段，提高用户体验
+
+
+Q:  常见依赖配置(基于<property/>，也适用<constructor-arg/>)
+A: 
+1. 基本类型和String值设置 (也适用<constructor-arg/>)
+<bean id="exampleBean" class="examples.ExampleBean">
+	<property name="intProp" value="1"/>
+	<property name="stringProp">
+		<value>com.mysql.jdbc.Driver</value>
+	</property>
+	<!-- 如果属性是properties -->
+	<property name="stringProp">
+		<value>
+			key1=value1
+			key2=value2
+		</value>
+	</property>
+</bean>
+2. 引用其他singleton or prototype bean
+a. <idref/>子标签，通过id引用，并在装载bean definition时做存在性校验 
+<bean id="exampleBean" class="examples.ExampleBean">
+	<property name="targetName1">
+		<idref bean="targetBean1" />
+	</property>
+	<!-- targetBean2必须在同一个xml -->
+	<property name="targetName2">
+		<idref local="targetBean2" />
+	</property>
+</bean>
+b. <ref/>子标签，通过id/name引用
+<bean id="exampleBean" class="examples.ExampleBean">
+	<property name="targetName1">
+		<ref bean="targetBean1" />
+	</property>
+	<!-- targetBean2必须在同一个xml中配置 -->
+	<property name="targetName2">
+		<ref local="targetBean2" />
+	</property>
+
+	<!-- targetBean3必须在父容器中配置 -->
+	<property name="targetName3">
+		<ref parent="targetBean3" />
+	</property>
+</bean>
+3. inner bean(always anonymous and prototype)，会被容器屏蔽，无法被外部bean访问，只需要提供class，无需声明id/name
+<bean id="outer" class="...">
+<!-- instead of using a reference to a target bean, simply define the target bean inline -->
+	<property name="target">
+		<bean class="com.mycompany.Person"> <!-- this is the inner bean -->
+			<property name="name" value="Fiona Apple"/>
+			<property name="age" value="25"/>
+		</bean>
+	</property>
+</bean>
+4. collections(List/Set/Map/Properties)，分别对应<list/>,<set/>,<map/>,<props/>
+<bean id="moreComplexObject" class="example.ComplexObject">
+	<!-- results in a setAdminEmails(java.util.Properties) call -->
+	<property name="adminEmails">
+		<props>
+			<prop key="administrator">administrator@somecompany.org</prop>
+			<prop key="support">support@somecompany.org</prop>
+			<prop key="development">development@somecompany.org</prop>
+		</props>
+	</property>
+	<!-- results in a setSomeList(java.util.List) call -->
+	<property name="someList">
+		<list>
+			<value>a list element followed by a reference</value>
+			<ref bean="myDataSource" />
+		</list>
+	</property>
+	<!-- results in a setSomeMap(java.util.Map) call -->
+	<property name="someMap">
+		<map>
+			<entry>
+				<key>
+					<value>yup an entry</value>
+				</key>
+					<value>just some string</value>
+			</entry>
+			<entry>
+				<key>
+					<value>yup a ref</value>
+				</key>
+				<ref bean="myDataSource" />
+			</entry>
+		</map>
+	</property>
+	<!-- results in a setSomeSet(java.util.Set) call -->
+	<property name="someSet">
+		<set>
+			<value>just some string</value>
+			<ref bean="myDataSource" />
+		</set>
+	</property>
+</bean>
+map的key、value, set/list的value，可以由bean | ref | idref | list | set | map | props | value | null任意组合
+
+
+Q: empty string & null
+A:
+1. 空字符串
+<bean class="ExampleBean">
+	<!--email的值为“”-->
+	<property name="email"><value/></property>
+</bean>
+2. null
+<bean class="ExampleBean">
+	<!--email的值为null-->
+	<property name="email"><null/></property>
+</bean>
+
+
+Q: shortcut xml-based bean definition
+A: 简化子标签，或者引入p:namespace，注意项目中统一为1种固定风格(复杂式、子标签优化、p:namespace优化)
+1. use value属性 in <property/>, <constructor-arg/>, and <entry/> to replace <value>...</value>
+<property name="myProperty">
+	<value>hello</value>
+</property>
+as 
+<property name="myProperty" value="hello"/>
+
+<constructor-arg>
+	<value>hello</value>
+</constructor-arg>
+as
+<constructor-arg value="hello"/>
+
+<entry key="myKey">
+	<value>hello</value>
+</entry>
+as
+<entry key="myKey" value="hello"/>
+
+2. use ref属性 in <property/>, <constructor-arg/> to replase <ref bean="..."/>
+<property name="myProperty">
+	<ref bean="myBean">
+</property>
+as
+<property name="myProperty" ref="myBean"/>
+
+<constructor-arg>
+	<ref bean="myBean">
+</constructor-arg>
+as
+<constructor-arg ref="myBean"/>
+
+for entry
+<entry>
+	<key>
+		<ref bean="myKeyBean" />
+	</key>
+	<ref bean="myValueBean" />
+</entry>
+as
+<entry key-ref="myKeyBean" value-ref="myValueBean"/>
+
+3. p:namespace, (从2.0版本开始支持扩展命名空间)
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:p="http://www.springframework.org/schema/p"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans
+	                       http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
+	<bean name="john-classic" class="com.mycompany.Person">
+		<property name="name" value="John Doe"/>
+		<property name="spouse" ref="jane"/>
+	</bean>
+
+	<!--p:namespace将<property/>变为bean 属性-->
+	<bean name="john-modern" class="com.mycompany.Person" 
+		  p:name="John Doe" 
+		  p:spouse-ref="jane"/>
+
+	<!-- 被依赖的bean-->
+	<bean name="jane" class="com.mycompany.Person">
+		<property name="name" value="Jane Doe"/>
+	</bean>
+</beans>
+
+
+Q: 当bean之间没有直接的属性依赖关系，但实际上又对初始化有先后顺序要求时(如db driver的注册)
+A: 使用depends-on来表明初始化的先后顺序，同样也控制destroy的顺序
+only one bean
+<bean id="beanOne" class="ExampleBean" depends-on="manager"/>
+<bean id="manager" class="ManagerBean" />
+or more bean
+<bean id="beanOne" class="ExampleBean" depends-on="manager,accountDao">
+	<property name="manager" ref="manager" />
+</bean>
+<bean id="manager" class="ManagerBean" />
+<bean id="accountDao" class="x.y.jdbc.JdbcAccountDao" />
+
+
+Q: Lazily-instantiated beans
+A: 适用于ApplicationContext(因为BeanFactory本身就是延迟实例化)对singleton bean的预实例化
+<bean id="lazy" class="com.foo.ExpensiveToCreateBean" lazy-init="true"/>
+注意，如果一个延迟实例化的beanA被一个正常预实例化的beanB依赖，容器出于决策考虑，会正常预实例化beanA
+bean可以继承beans的default-lazy-init属性
+<beans default-lazy-init="true">
+	<!-- no beans will be pre-instantiated... -->
+</beans>
+
+
+Q: Autowiring collaborators
+A: spring可以基于bean配置自动注入依赖，用于减少配置项
+基于<bean/>的autowire属性，一共有五种自动注入依赖的策略：
+1. autowire=no, 默认策略，不自动注入依赖
+2. autowire=byName，基于bean属性名称，自动注入容器中有相同名称的bean
+3. autowire=byType，基于bean属性类型，自动注入容器中有相同类型的bean，如果匹配多个bean，抛出异常;如果没有匹配到Object，默认为不需要注入依赖
+4. autowire=constructor，类似于byType，适用于constructor DI配置。
+5. autowire=autodetect，系统会自动根据DI类型采用byType or constructor
+注意：
+a. 在xml中显示声明的依赖优先级更高，会自动覆盖autowiring默认策略
+b. 简单属性，如:基本类型、String、Classes，以及它们的集合，无法使用autowire自动注入
+
+
+Q: Autowiring的优点和缺点
+A: autowiring的优点和缺点都很明显
+优点：
+1. 可以极大地减少配置项
+2. 自适应代码中新增的依赖而无需修改配置文件
+缺点：
+1. 依赖关系没有xml配置明显，更加“魔术化”
+2. byType只适用于对应类型的bean唯一，如果有冲突则只能xml配置添加额外信息
+   将bean属性autowire-candidate设置为false，则容器不会将它自动注入别的bean
+
+
+Q: Checking for dependencies
+A: 检查依赖是否被注入的策略
+基于<bean/>的dependency-check属性，有以下策略：
+1. none    : 无需检查，如果没有注入依赖，则为null/默认值
+2. simple  : 对基本类型和集合进行检查
+3. object  : 对引用类型进行检查
+4. all     : 2&3同时符合
+
+
+Q:  Method Injection，通过方法参数注入依赖
+对有些singleton bean，它可以需要在方法中使用prototype bean，但容器只会在初始化bean的时候注入依赖，而singleton只会初始化一次。
+有种方案是，bean去实现BeanFactoryAware接口，然后在代码中通过getBean来获取依赖，但这种方法和spring IOC耦合，并不推荐使用。
+Spring提供了更为简洁的方法Lookup-method，通过CGLIB字节码技术提供子类去override lookup method并自动返回prototype bean（依赖CGLIB jar）
+程序代码：
+package fiona.apple;
+// no more Spring imports!
+public abstract class CommandManager {
+	public Object process(Object commandState) {
+		// grab a new instance of the appropriate Command interface
+		Command command = createCommand();
+		// set the state on the (hopefully brand new) Command instance
+		command.setState(commandState);	
+		return command.execute();
+	}
+	// okay... but where is the implementation of this method?
+	protected abstract Command createCommand();
+}
+
+bean配置：
+<!-- a stateful bean deployed as a prototype (non-singleton) -->
+<bean id="command" class="fiona.apple.AsyncCommand" scope="prototype">
+<!-- inject dependencies here as required -->
+</bean>
+<!-- commandProcessor uses statefulCommandHelper -->
+<bean id="commandManager" class="fiona.apple.CommandManager">
+	<lookup-method name="createCommand" bean="command"/>
+</bean>
+
+lookup-method的签名形式：
+<public|protected> [abstract] <return-type> theMethodName(no-arguments);
+如果方法是abstract，子类会implement，否则会override
+
+
+Q: bean scope
+A: spring中定义了以下bean scope
+基于<bean/>的scope属性，有以下策略：(1.x中是利用singleton=ture/false来区别)
+1. singleton : 
+2. prototype :
+3. request
+4. session
+5. global session
+
+3,4,5是2.0新增，仅适用于 the context of a web-aware Spring ApplicationContext
+当request/session/global session bean被标准scope bean依赖时，我们需要使用代理对象(需要aop命名空间，以及CGLIB jar)
+道理类似于look-up method
+<bean id="userPreferences" class="com.foo.UserPreferences" scope="session">
+	<aop:scoped-proxy/>
+</bean>
+<bean id="userManager" class="com.foo.UserManager">
+	<property name="userPreferences" ref="userPreferences"/>
+</bean>
+注意：默认使用CGLIB代理，只能代理public method。 可以通过设置让spring使用JDK的动态代理(目标类需要实现接口，引用类也通过接口访问)
+<aop:scoped-proxy proxy-target-class="false"/>
+
+
+Q: Lifecycle interfaces
+A: 
+遗留接口，需要和Spring框架耦合，
+InitializingBean(I)
+	void afterPropertiesSet()
+DisposableBean(I)
+	void destroy()
+可以改为xml配置
+<bean id="exampleInitBean" class="examples.ExampleBean" init-method="init"/>		
+<bean id="exampleInitBean" class="examples.ExampleBean" destroy-method="cleanup"/>
+如果项目中约定了相同的init()方法和destroy()方法，我们可以使用<beans/>缺省配置
+<beans default-init-method="init" default-destroy-method="destroy">
+
+This means that the initialization
+callback will be called on the raw bean reference, which means that any AOP interceptors or suchlike that will
+ultimately be applied to the bean will not yet be in place. A target bean is fully created first, then an AOP proxy
+(for example) with its interceptor chain is applied. Note that, if the target bean and the proxy are defined
+separately, your code can even interact to the raw target bean, bypassing the proxy. Hence, it would be very
+inconsistent to apply the interceptors to the init method, since that would couple the lifecycle of the target bean
+with its proxy/interceptors, and leave strange semantics when talking to the raw target bean directly.
+
+
+Q: Knowing who you are
+A: 相关接口
+1. BeanFactoryAware
+	void setBeanFactory(BeanFactory beanFactory)
+BeanFactory创建好实现该接口的bean后，会把自己注入给bean，使之获得了操纵bean的能力。不推荐使用，1.耦合了Spring框架 2.违反了Ioc原则
+为了避免2，可以使用ObjectFactoryCreatingFactoryBean
+
+2. BeanNameAware
+	void setBeanName(String name)
+
+
+Q: Bean definition inheritance
+A: 
+1. sub bean通过parent属性来指定父bean
+<bean id="inheritedTestBean" abstract="true" class="org.springframework.beans.TestBean">
+	<property name="name" value="parent"/>
+	<property name="age" value="1"/>
+</bean>
+<bean id="inheritsWithDifferentClass" class="org.springframework.beans.DerivedTestBean"
+	  parent="inheritedTestBean" init-method="initialize">
+	<property name="name" value="override"/>
+<!-- the age property value of 1 will be inherited from parent -->
+</bean>	
+
+当我们设置bean的abstract="true"时，不能被其他bean引用，BeanFactory不能实例化，Application也不会预实例化
+<bean id="inheritedTestBeanWithoutClass" abstract="true">
+	<property name="name" value="parent"/>
+	<property name="age" value="1"/>
+</bean>
+
+
+Q: Container extension points
+A: Spring为IoC容器预留的扩展接口
+1. 在容器实例化bean过程中，对bean进行个性化修改，(只对当前容器有效)   
+BeanPostProcessor
+	Object postProcessBeforeInitialization(Object bean, String beanName)
+	Object postProcessAfterInitialization(Object bean, String beanName)
+在执行bean的初始化方法前后，添加一些自己的处理逻辑。这里说的初始化方法，指的是下面两种：
+1）bean实现了InitializingBean接口，对应的方法为afterPropertiesSet
+2）在bean定义的时候，通过init-method设置的方法
+
+InstantiationAwareBeanPostProcessor
+	Object postProcessBeforeInstantiation(Class beanClass, String beanName)
+	boolean postProcessAfterInstantiation(Object bean, String beanName)                                                       2.0
+	PropertyValues postProcessPropertyValues(PropertyValues pvs, PropertyDescriptor[] pds, Object bean, String beanName)      2.0
+
+SmartInstantiationAwareBeanPostProcessor                                                                                      2.0
+	Class predictBeanType(Class beanClass, String beanName)
+	Constructor determineConstructor(Class beanClass, String beanName)	
+
+e.g. RequiredAnnotationBeanPostProcessor	
+
+
+2. 在容器实例化bean前，对bean definition进行个性化修改
+BeanFactoryPostProcessor
+	void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory)
+
+e.g. PropertyPlaceholderConfigurer，基于properties文件，替换bean definition的变量值
+<bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+	<property name="locations">
+		<value>classpath:com/foo/jdbc.properties</value>
+	</property>
+</bean>
+<!--甚至可以替换class-->
+<bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+	<property name="locations">
+		<value>classpath:com/foo/strategy.properties</value>
+	</property>
+	<property name="properties">
+		<value>custom.strategy.class=com.foo.DefaultStrategy</value>
+	</property>
+</bean>
+<bean id="serviceStrategy" class="${custom.strategy.class}"/>
+
+e.g. PropertyOverrideConfigurer
+
+Application初始化时会自动侦查容器中实现了BeanPostProcessor的bean，将其实例化并注册到beanFactory，用于控制其他类型的bean初始化
+注册方法：factory.addBeanPostProcessor(postProcessor)
+Application会自动侦查容器中实现了BeanFactoryPostProcessor的bean,将其实例化并对beanFactory的bean definition进行处理(实例化其他类型bean之前)
+由于Spring AOP的自动代理也是基于BeanPostProcessor来扩展，所有的BeanPostProcessor bean及其引用的其他bean，将无法使用AOP特性
+BeanPostProcessor和BeanFactoryPostProcessor的bean definition不能lazily-initialized
+
+3. bean本身就是一个factory，提供特定Object
+FactoryBean
+	Object getObject()
+	Class getObjectType()
+	boolean isSingleton()
+对于配置的FactoryBean，getBean("myBean")返回的是它的product object，getBean("&myBean")返回的才是FactoryBean本身
+
+
+Q: ApplicationContext对比BeanFactory
+A: ApplicationContext派生自BeanFactory并拥有其全部功能(通过factory实现类代理)，除此之外，ApplicationContext额外添加了以下特性：
+1. MessageSource, providing access to messages in i18n-style
+2. Access to resources, such as URLs and files
+3. Event propagation to beans implementing the ApplicationListener interface
+4. Loading of multiple (hierarchical) contexts, allowing each to be focused on one particular layer, for example the web layer of an application
+大多数情况下，我们都会使用ApplicationContext，并且利用hook由web容器自动初始化ApplicationContext，而无需手工装载。
+
+1. 资源文件(i18n):ApplicationContext -> MessageSource
+MessageSource
+	String getMessage(String code, Object[] args, String default, Locale loc)
+	String getMessage(String code, Object[] args, Locale loc)
+	String getMessage(MessageSourceResolvable resolvable, Locale locale)
+同样通过代理实现，AC在初始化时，会按照以下顺序定位代理类
+a. 在bean容器中寻找实现了MessageSource，且name='messageSource'的bean，如果找不到，转b
+b. 如果存在父容器，在父容器中找这个bean，如果没有父容器或找不到，转c
+c. 实例化一个空的StaticMessageSource
+Spring提供的MessageSource主要实现类：ResourceBundleMessageSource(常用)和StaticMessageSource
+<beans>
+	<bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
+		<property name="basenames">
+			<list>
+				<value>format</value>
+				<value>exceptions</value>
+				<value>windows</value>
+			</list>
+		</property>
+	</bean>
+	<!-- let's inject the above MessageSource into this POJO-->
+	<bean id="example" class="com.foo.Example">
+		<property name="messages" ref="messageSource"/>
+	</bean>
+</beans>
+如上声明了format.properties、exceptions.properties、windows.properties三个资源文件(如果是i18n，定义对应的locale文件format_en_GB.properties)
+# in 'format.properties'
+message=Alligators rock!
+# in 'exceptions.properties'
+argument.required=The '{0}' argument is required.
+
+public class Example {
+	private MessageSource messages;
+	public void setMessages(MessageSource messages) {
+		this.messages = messages;
+	}
+	public void execute() {
+		String message = this.messages.getMessage("argument.required",
+		new Object [] {"userDao"}, "Required", null);
+		System.out.println(message);
+	}
+}
+
+除了手动在xml中引用messageSource，我们还可以让ApplicationContext自动为我们注入，只要实现了aware接口
+MessageSourceAware
+	void setMessageSource(MessageSource messageSource)
+
+2. 消息事件(event): ApplicationContext -> ApplicationEventPublisher
+ApplicationEventPublisher	
+	void publishEvent(ApplicationEvent event)
+ApplicationContext遵循了Java观察者模式，为所有实现了ApplicationListener的bean，发送ApplicationEvent
+框架定义的event
+ContextRefreshedEvent : 在ApplicationContext init或refresh后，发布的事件
+ContextClosedEvent : 在ApplicationContext close后，发布的事件
+RequestHandledEvent：ServletDispatcher处理完Request后,利用ApplicationContext发布的事件
+
+ApplicationListener
+	void onApplicationEvent(ApplicationEvent event)
+
+我们也可以发布自己的Event，定义对应的Listener
+a. 定义个性化Event extends ApplicationEvent
+b. 消息发布者bean实现ApplicationContextAware接口，自动注入ac，并利用ac.publishEvent发布事件
+c. 监听者bean实现ApplicationListener，在onApplicationEvent判断指定事件并进行处理
+
+3. 资源装载: ApplicationContext -> ResourcePatternResolver -> ResourceLoader
+ApplicationContext，基于context config去装载Resource
+详见Resouce体系
+
+4. ApplicationContext在web app中的自动初始化
+a. 通过ContextLoaderListener（推荐）或ContextLoaderServlet，利用实例变量ContextLoader来初始化Root ApplicationContext
+<context-param>
+	<!--不设置则使用默认path:/WEB-INF/applicationContext.xml
+		支持ant-style的通配符，如：/WEB-INF/*Context.xml， /WEB-INF/**/*Context.xml
+	-->
+	<param-name>contextConfigLocation</param-name>
+	<param-value>/WEB-INF/daoContext.xml /WEB-INF/applicationContext.xml</param-value>
+</context-param>
+<listener>
+	<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+</listener>
+b. 每个DispatchServlet会初始化自己的ApplicationContext
+
+
+Q: Spring Resource体系
+A: 
+1. 通用资源接口:Resource -> InputStreamSource
+java.net.URL及其处理类不能适用于所有的底层资源访问，如classpath资源，ServletContext上下文路径，去扩展起来很复杂，也缺少一些基础的功能，如检查资源是否存在
+为此Spring声明了Resource通用接口
+
+InputStreamSource
+	InputStream getInputStream()
+Resource
+	boolean exists()
+	boolean isOpen()
+	URL getURL()
+	File getFile()
+	Resource createRelative(String relativePath)
+	String getFilename()
+	String getDescription()
+
+AbstractResource ..> Resource
+	UrlResource
+	InputStreamResource
+	ClassPathResource	         
+	FileSystemResource
+	ServletContextResource
+	PortletContextResource
+
+2. 通用的资源Loader: ResourceLoader  (ApplicaiontContext->ResourcePatternResolver)
+ResourceLoader
+	String CLASSPATH_URL_PREFIX = “classpath:”
+	ClassLoader getClassLoader()
+	Resource getResource(String location)
+ResourcePatternResolver
+	String CLASSPATH_ALL_URL_PREFIX = "classpath*:"
+	Resource[] getResources(String locationPattern)
+
+
+当ApplicationContext.getResource(String location)时，如果location没有指定协议前缀，对于不同的ApplicationContext实例，它返回的Resouce实例也不相同
+ClassPathXmlApplicationContext.getResource(...) , 返回的是ClassPathResource
+FileSystemXmlApplicationContext.getResource(...) ,返回的是FileSystemResource
+WebApplicationContext.getResource(...) , 返回的是ServletContextResource
+location协议前缀：
+classpath:some/resource/path/myTemplate.txt             :ClassPathResource
+file:/some/resource/path/myTemplate.txt                 :UrlResource
+http://myhost.com/resource/path/myTemplate.txt          :UrlResource  
+
+ApplicationContext基于path装载资源的策略：
+通过PathMatchingResourcePatternResolver组件去解析path：
+a. path以"classpath*:"开头
+	a.1 不含通配符，利用AC的ClassLoader.getResources()，返回所有符合的资源URL并转化为UrlResource[]
+	a.2 含通配符，转c
+b. path不以"classpath*:"开头
+	b.1 不含通配符，利用AC.getResource(...)，基于path协议(如有)或默认值，转化为对应的XxxResource
+	b.2 含通配符，转c
+c. path如果含通配符，从后往前找到不含通配符的最长路径作为root path，将root path转化为Resource然后使用FilePath/JarPath遍历子路径并匹配结果
+
+"classpath:" 和"classpath*:"
+两者都是基于classpath寻找资源，但前者只返回最先找到的资源，而后者会返回所有匹配的资源（利用ClassLoader.getResources(...)）
+由于CloassLoader.getResources的限制，"classpath*:*.xml"只能返回跟目录下的所有xml文件而不能返回jar包根目录下的所有xml文件，必须至少指定一个root path，如"classpath*:a/*.xml"
+
+bean扩展：applicationContext会把自己传进去
+ResourceLoaderAware
+	void setResourceLoader(ResourceLoader resourceLoader)
+
+如果bean需要引用Resource，简单的做法就是向spring暴露Resource属性，然后Spring在实例化Bean时，会使用特殊的PropertyEditor将value中的path转换为对应Resource并注入
+<bean id="myBean" class="...">
+	<property name="template" value="some/resource/path/myTemplate.txt"/>
+</bean>
+
+
+Q: annotation style DI
+A: Spring Ioc容器还是基于1.4版本实现，为了支持注释，利用了BeanPostProcessor来对bean 的依赖进行处理
+1. 通过<context:annotation-config/>标签(2.5)，注册相关的预定义BeanPostProcessor
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+	                       http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+	                       http://www.springframework.org/schema/context
+	                       http://www.springframework.org/schema/context/spring-context-2.5.xsd">
+	<context:annotation-config/>
+</beans>
+隐式注册了以下BeanPostProcessor:
+a. AutowiredAnnotationBeanPostProcessor                    处理@Autowired
+b. CommonAnnotationBeanPostProcessor                       处理JSR-250的三个注解
+c. PersistenceAnnotationBeanPostProcessor
+d. RequiredAnnotationBeanPostProcessor                     处理@Required注解(基本上被@Autowired淘汰)
+
+2. @Required，标记注解，针对setter method，要求依赖在bean初始化后必须被注入(不管是xml配置还是编程式声明)，否则抛出异常
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface Required {}
+
+示例：
+public class SimpleMovieLister {
+	private MovieFinder movieFinder;
+
+	@Required
+	public void setMovieFinder(MovieFinder movieFinder) {
+		this.movieFinder = movieFinder;
+	}
+	// ...
+}
+
+3. @Autowired，自动注入依赖，属性required的默认值为true，同时达到@Required的效果
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.CONSTRUCTOR, ElementType.FIELD, ElementType.METHOD})
+public @interface Autowired {
+	boolean required() default true;
+}
+
+@Autowired默认按照byType进行注入，但是当byType方式找到了多个符合的bean，则又按照byName方式比对，如果还有多个，则报出异常。
+
+示例1：注解传统的setter方法
+public class SimpleMovieLister {
+	private MovieFinder movieFinder;
+	@Autowired
+	public void setMovieFinder(MovieFinder movieFinder) {
+		this.movieFinder = movieFinder;
+	}
+	// ...
+}
+
+示例2：一个方法同时注入两个依赖
+public class MovieRecommender {
+	private MovieCatalog movieCatalog;
+	private CustomerPreferenceDao customerPreferenceDao;
+
+	@Autowired
+	public void prepare(MovieCatalog movieCatalog, CustomerPreferenceDao customerPreferenceDao) {
+		this.movieCatalog = movieCatalog;
+		this.customerPreferenceDao = customerPreferenceDao;
+	}
+	// ...
+}
+
+示例3：注解字段或构造方法
+public class MovieRecommender {
+	@Autowired
+	private MovieCatalog movieCatalog;
+
+	private CustomerPreferenceDao customerPreferenceDao;
+
+	@Autowired
+	public MovieRecommender(CustomerPreferenceDao customerPreferenceDao) {
+		this.customerPreferenceDao = customerPreferenceDao;
+	}
+	// ...
+}
+
+bean中如果定义了以下接口的属性并使用了@Autowired注解，依照约定自动注入(也就是可以不用实现对应的xxxAware接口了)
+BeanFactory
+ApplicationContext
+ResourceLoader
+ApplicationEventPublisher
+MessageSource
+
+3. @Qualifier，由于@Autowired的匹配策略，我们可以用@Qualifier来明确指示怎么匹配
+@Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.TYPE, ElementType.ANNOTATION_TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Inherited
+@Documented
+public @interface Qualifier {
+	String value() default "";
+}
+
+示例1
+public class MovieRecommender {
+	@Autowired
+	@Qualifier("main")
+	private MovieCatalog movieCatalog;
+	// ...
+}
+
+示例2
+public class MovieRecommender {
+	private MovieCatalog movieCatalog;
+	private CustomerPreferenceDao customerPreferenceDao;
+
+	@Autowired
+	public void prepare(@Qualifier("main") MovieCatalog movieCatalog, CustomerPreferenceDao customerPreferenceDao) {
+		this.movieCatalog = movieCatalog;
+		this.customerPreferenceDao = customerPreferenceDao;
+	}
+	// ...
+}
+
+在xml中指定所依赖的bean的qualifier值，当然，默认就是以name作为qualifier值(可能有些bean无需设置name属性，这时独立的qualifier标签就有意义了)
+<bean class="example.SimpleMovieCatalog">
+	<qualifier value="main"/>
+	<!-- inject any dependencies required by this bean -->
+</bean>
+<bean class="example.SimpleMovieCatalog">
+	<qualifier value="action"/>
+	<!-- inject any dependencies required by this bean -->
+</bean>
+
+4. @Resource : 和@Autowired的目的是相同的，区别在于：
+a. @Resource是JSR-250的标准注解，而@Autowired是Spring自家的
+b. @Resource注入依赖的策略是byName，而@Autowired默认byType再byName
+c. @Resource只支持field和setter method，@Autowired支持field、constructor、setter method & muti-argument method
+
+示例1:显式指明依赖的name
+public class SimpleMovieLister {
+	private MovieFinder movieFinder;
+
+	@Resource(name="myMovieFinder")
+	public void setMovieFinder(MovieFinder movieFinder) {
+		this.movieFinder = movieFinder;
+	}
+}
+
+示例2，使用setter默认名movieFinder
+public class SimpleMovieLister {
+	private MovieFinder movieFinder;
+
+	@Resource
+	public void setMovieFinder(MovieFinder movieFinder) {
+		this.movieFinder = movieFinder;
+	}
+}
+
+5. @PostConstruct & @PreDestroy
+和@Resource一样是JSR-250的标准注解，作用类似于<bean/>的init-method属性和destroy-method属性，指明初始化和注销方法。
+
+
+Q: annotation style Bean registy
+A: 上面提到了通过注解来声明依赖，但我们还是要在xml中配置bean，spring 2.5开始，同样支持通过注解自动声明bean
+1. @Component、@Service、 @Controller、@Repository
+这几个注解都用于自动声明bean，分为不同的命名是为了根据职责更好地细化bean
+
+2. xml文件配置
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:context="http://www.springframework.org/schema/context"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans
+	                       http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+	                       http://www.springframework.org/schema/context
+						   http://www.springframework.org/schema/context/spring-context-2.5.xsd">
+	<context:component-scan base-package="org.example"/>
+</beans>
+这个标签同样默认注册了处理依赖注解的BeanPostProcessor: AutowiredAnnotationBeanPostProcessor CommonAnnotationBeanPostProcessor
+所以我们可以不用再引入<context:annotation-config/>标签
+也可以通过<context:component-scan/>属性annotation-config="false"来禁止注册BeanPostProcessor
+

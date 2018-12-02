@@ -1,0 +1,32 @@
+* Installation
+** windows 10
+    1. create a new administrator user named postgres
+    2. restart your computer
+    3. cmd command: "runas/user:postgres cmd.exe"
+    4. run the installer file in new window
+** mac
+    homebrew:
+
+* Config
+** logic structure
+    postgres instance - (like ip:port)
+        database - (default postgres database)
+            schema - (default public schema)
+                objects - (like table/view/index/sequence/function/type...)
+
+** auth
+
+| 实例权限       |                      | 修改pg_hba.conf |
+| database权限   | 允许连接、创建schema | grant/revoke    |
+| schema权限     | 允许查询、创建对象   | grant/revoke    |
+| object权限     | 允许查询、操作object | grant/revoke    |
+| tablespace权限 |                      | grant/revoke    |
+
+postgres中所有的权限都和role(user)挂钩，public是一个特殊role，代表所有人
+默认情况下：
+    超级用户允许任意操作对象
+    普通用户只能操作自己创建的对象
+    数据库在创建后，允许public角色连接，即允许任何人连接，但不允许除了超级用户和owner之外的任何人在数据库中创建schema
+    自动创建名为public 的schema，这个schema的all权限已经赋予给public角色，即允许任何人在里面创建对象
+    默认情况下新建的schema的权限不会赋予给public角色，因此除了超级用户和owner，任何人都没有权限查看schema中的对象或者在schema中新建对象
+

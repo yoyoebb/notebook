@@ -1,0 +1,35 @@
+* Tomcat
+TOMCAT 7 虚拟目录： 在%CATALINA_HOME%/conf/server.xml文件中的<Host>标签下添加：
+<Context path="/$APP域名$" docBase="$APP具体路径$" debug="0" reloadable="true" />
+
+* Maven Plugin
+** 在pom中引入plugin
+#+BEGIN_SRC xml
+  <build>
+    <plugins>
+      <plugin>
+	<groupId>org.apache.tomcat.maven</groupId>
+	<!-- tomcat6、tomcat7、tomcat8-->
+	<artifactId>tomcat7-maven-plugin</artifactId>
+	<version>2.2</version>
+      </plugin>
+    </plugins>
+  </build>
+#+END_SRC
+
+Goals as following:
+| Goal                  | Description                      |
+|-----------------------+----------------------------------|
+| tomcat7:deploy        | deploy a WAR to Tomcat           |
+| tomcat7:deploy-only   | 不执行 package lifecycle         |
+| tomcat7:exec-war      | 打出一个内置tomcat7的可执行jar   |
+| tomcat7:exec-war-only | 同理                             |
+| tomcat7:run           | 用embedded Tomcat运行project     |
+| tomcat7:run-war       | 打个war，用embedded Tomcat运行它 |
+| tomcat7:run-war-only  | 同理                             |
+| tomcat7:shutdown      | 关闭所有启动的embedded Tomcat    |
+
+** config plugin
+*** for deploy
+
+*** for embedded

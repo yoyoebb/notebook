@@ -1,0 +1,35 @@
+vi <file>
+vi 是linux自带的纯文本编辑器(比Win平台的Notepad 强太多了。)
+它有两种编辑模式
+	• Insert Mode：输入或编辑文件内容。
+	• Edit Mode：对文件内容进行整体操作。如行编辑、列编辑、块编辑、内容搜索、保存&退出等。
+Swtich Mode :
+一开始处于Edit Mode，通过'a'/'A'、'i'/'I' 可以进入Insert Mode。
+Insert Mode下按Esc返回Edit Mode。
+如果你不确定自己在哪个模式。1.看左下角是否有Insert字样。  2.按Esc键(Insert Mode则返回Edit Mode，Edit Mode下则没有效果)
+
+Edit Mode  (输入  :   /   ? )
+:w	保存文件修改
+:w!	强制保存文件修改。真对只读文件且有权限
+:q	退出VI
+:q!	强制退出VI，当修改了文件又不愿意保存时使用
+:wq	保存后退出，ZZ也有同样功效
+:set nu	显示行号
+
+:n	光标移动到指定第n行 or 最后一行($)行首
+:$
+[n]G	光标移动到指定第n行首 or 最后一行(G)行首
+G
+^	光标移动到所在行行首/行尾
+$
+dd	删除光标所在行
+d[n]d	从光标所在行开始，删除n行
+u	undo上一次操作
+U	undo对这一行的所有操作
+
+/word	从光标往下寻找word字符串
+	n继续往下找，N继续往上找
+?word	从光标往上寻找word字符串
+
+i	从光标往上寻找word字符串
+o	在当前行下面新增一行，并进入编辑模式

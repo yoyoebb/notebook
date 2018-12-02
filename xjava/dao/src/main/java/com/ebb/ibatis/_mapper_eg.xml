@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace
+     在之前的版本，namespace并没有太大的作用，还容易引起混乱
+     启用Mapper后，这里需要声明为Mapper的full name，以便于自动关联
+-->
+<mapper namespace="xxxx">
+    <!-- 写在前面的话
+         1. type alias 已经移到了config
+         2. parameterMap 属性已经废弃(@deprecated)，不再使用
+    -->
+
+    <!-- Parameter
+         mybatis支持两种类型的参数：
+         1. #{...}，对应prepared statement中的占位符，主要用于where从句、values从句、set从句
+         #{firstName}
+         #{middleInitial,jdbcType=VARCHAR}
+         2. ${...}, 简单的字符串替换，可能导致sql注入攻击，主要用于order by等动态变化的地方
+         ${firstName}
+    -->
+
+
+    <!-- <select>  用来声明select statement
+         id=""
+         parameterType=""       传入参数的full class name or alias
+         resultType=""          返回值的full class name or alias
+         resultMap=""           根据id引用map，返回值类型在map中定义，和resultType二选一
+
+         useCache="true"        [true] | false
+         flushCache="false"      true  | [false]
+         statementType=""       STATEMENT | [PREPARED] | CALLABLE
+         resultSetType="">      FORWARD_ONLY | SCROLL_SENSITIVE | SCROLL_INSENSITIVE default is unset(driver dependent)
+
+         timeout="10000"
+         fetchSize="256"
+         databaseId=""
+         resultOrdered=""
+         resultSets=""
+    -->
+    <select id="" resultType="">...</select>
+
+    <!-- <insert>  用来声明insert statement
+         id=""
+         parameterType=""
+
+         flushCache=""          [true] | false
+         statementType=""       STATEMENT | [PREPARED] | CALLABLE
+
+         useGeneratedKeys=""    true | [false] 插入前调用Jdbc的getGenereatedKeys方法获取主键并赋值到keyProperty
+                                只适用于有自增长字段的DB，如:MySQL和SQLServer
+         keyProperty=""         和useGeneratedKeys配套使用，获取主键值
+
+         keyColumn=""
+         timeout="20"
+    -->
+    <insert id="">
+        <!-- <selectKey>
+             keyProperty=""     映射参数对象的属性
+             order="BEFORE"     BEFORE | [AFTER] select和insert的执行顺序
+        -->
+        <selectKey keyProperty="" order="BEFORE">...</selectKey>
+        ...
+        <!-- 复用<sql>-->
+        <include refid=""/>
+    </insert>
+
+
+    <!-- <update | delete>  用来声明update | delete statement
+         id="updateAuthor"
+         parameterType="domain.blog.Author"
+         flushCache="true"
+         statementType="PREPARED"
+         timeout="20"
+    -->
+    <update id="">...</update>
+    <delete id="">...</delete>
+
+
+    <!-- <sql>  用来声明sql代码块，在其他statement中引用
+         id=""
+    -->
+    <sql id="">...</sql>
+
+
+    <!-- <resultMap>  用来映射database columns to Java fields (一般用于复杂场景)
+         id=""
+         type=""             java full class name or alias
+
+         autoMapping=""
+         extends=""
+
+         resultMap可以变得非常复杂，内部子标签可以互相嵌套
+    -->
+    <resultMap id="" type="">
+        <!--<constructor>  有idArg、arg子标签，映射构造方法
+        -->
+        <constructor>
+            <!-- idArg & arg
+                 column=""
+                 name=""
+                 javaType=""
+                 jdbcType=""
+                 resultMap=""
+                 select=""
+                 typeHandler=""
+            -->
+            <idArg column="" />
+            <arg column="" />
+        </constructor>
+
+        <!-- <id> & <result>    用于映射普通java属性(数值、字符串、日期等)
+             property=""
+             column=""
+
+             jdbcType=""
+             javaType=""
+             typeHandler=""
+        -->
+        <id property="" column=""/>
+        <result property="" column="" />
+
+        <!--<association>    用于映射复杂java属性(内部的resultMap，当出现1vs1结果集时使用)
+            property=""
+            javaType=""
+
+            column=""
+            jdbcType=""
+            typeHandler=""
+
+            select=""
+            resultMap=""
+            autoMapping=""
+            columnPrefix=""
+            fetchType=""
+        -->
+        <association property="" javaType="">
+            <id />
+            <result />
+        </association>
+
+        <!-- <collection>    用于映射集合类型属性(内部的resultMap，当出现1vsN结果集时使用)
+        -->
+        <collection property="">
+
+        </collection>
+
+        <!-- <discriminator javaType="">  根据数据库某列的值来做条件映射(内部的resultMap)
+        -->
+        <discriminator javaType="" column="">
+            <case value=""></case>
+        </discriminator>
+    </resultMap>
+
+
+    <!-- <cache>
+    -->
+    <cache></cache>
+</mapper>

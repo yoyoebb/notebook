@@ -1,0 +1,116 @@
+* DataSource
+** 简介
+*** DataSource
+  在正式系统中，频繁开启、关闭DB Connection很耗费资源，影响系统性能，那么能不能复用已经创建的连接呢？答案是肯定的，人们引入了一种早已存在的技术方案，那就是 - 池(Pool)，但是连接池多种多样，可能存在变化，最终引入了 ~javax.sql.DataSource~ 接口进行隔离解耦。
+  #+BEGIN_EXAMPLE
+  // javax.sql.DataSource
+  Connection     getConnection()
+  Connection     getConnection(String username, String password)
+  #+END_EXAMPLE
+
+  DataSource的主要职责就是：
+  1. 保存数据库配置信息，用于连接DB，创建Connection
+  2. 作为Connection Factory对外提供Connection
+  3. 对内维护Connection和Pool的关系
+
+  DS提供的Connection一般是原生DB Connection的Proxy或者Wrap，当程序中调用Connection.close()时，并不是真正关闭，而是初始化环境后回到Pool等待被复用。
+*** Connection Pool
+  DataSource的具体实例都是通过底层的Connection pool来保存Connection，pool一般采用FIFO的Queue来实现，
+** 常用的DataSource
+*** Druid
+  Druid是由国内阿里提供的一个开源项目，基于Apache 2.0协议，只支持JDK 6及以上版本，其配置和DBCP基本一致。Druid的口号是:"为监控而生的数据库连接池"，其目标是成为Java最好的数据库连接池(基本实现)。
+  
+  Druid 0.1.18之后的版本都发布到了maven中央仓库，引用方式：
+  #+BEGIN_SRC xml
+    <dependency>
+      <groupId>com.alibaba</groupId>
+      <artifactId>druid</artifactId>
+      <version>${druid-version}</version>
+    </dependency>
+  #+END_SRC
+
+  Druid代码托管在GitHub平台，“https://github.com/alibaba/druid“
+*** C3P0
+*** 
+* alibaba druid
+** github site
+    https://github.com/alibaba/druid/wiki/常见问题
+** maven dependency
+    在pom.xml中添加druid依赖
+    #+BEGIN_SRC xml
+      <dependency>
+	<groupId>com.alibaba</groupId>
+	<artifactId>druid</artifactId>
+	<version>${version}</version>
+      </dependency>
+    #+END_SRC
+** spring config
+*** define datasouce
+    在spring 的config配置文件中引入dataSource bean
+    #+BEGIN_SRC xml
+      <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
+	<!-- 基本属性 url、user、password -->
+	<!-- druid会根据url自动推断driver-->
+	<property name="url" value="${jdbc_url}" />
+	<property name="username" value="${jdbc_username}" />
+	<property name="password" value="${jdbc_password}" />
+  
+	<!-- 配置初始化大小、最小、最大 -->
+	<property name="initialSize" value="${druid.initialSize:1}" />
+	<property name="minIdle" value="${druid.minIdle:1}" />
+	<property name="maxActive" value="${druid.maxActive:20}" />
+
+	<!-- 配置获取连接等待超时的时间 单位是毫秒-->
+	<property name="maxWait" value="${druid.maxWait:60000}" />
+
+	<!-- 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒 -->
+	<property name="timeBetweenEvictionRunsMillis" value="${druid.timeBetweenEvictionRunsMillis:60000}" />
+
+	<!-- 配置一个连接在池中最小生存的时间，单位是毫秒 -->
+	<property name="minEvictableIdleTimeMillis" value="${druid.minEvictableIdleTimeMillis:300000}" />
+
+	<property name="validationQuery" value="${druid.validationQuery}" />
+	<property name="testWhileIdle" value="${druid.testWhileIdle:true}" />
+	<property name="testOnBorrow" value="${druid.testOnBorrow:false}" />
+	<property name="testOnReturn" value="${druid.testOnReturn:false}" />
+
+	<!-- 打开PSCache，并且指定每个连接上PSCache的大小 -->
+	<property name="poolPreparedStatements" value="${druid.poolPreparedStatements:true}" />
+	<property name="maxPoolPreparedStatementPerConnectionSize" value="${druid.maxPoolPreparedStatementPerConnectionSize:20}" />
+
+	<!-- 配置监控统计拦截的filters -->
+	<!-- 4种常见日志的alias : log4j、log4j2、slf4j、commonlogging -->
+	<property name="filters" value="${druid.filters:stat}" />
+      </bean>
+   #+END_SRC
+*** define filter(like stat, log)
+    DruidDataSource支持通过Filter-Chain模式进行扩展，类似Serlvet的Filter，扩展十分方便，你可以拦截任何JDBC的方法。
+
+    有两种配置Filter的方式，一种是配置filters属性，一种是配置proxyFilters属性。filters和proxyFilters的配置是组合关系，而不是替换关系。
+
+    + filters attribute
+      #+BEGIN_SRC xml
+        <!-- filters的类型是字符串，多个filter使用逗号隔开
+	     filters属性的配置使用别名或者全类名
+	     available aliases can refer to META-INF/druid-filter.properties
+	-->
+        <property name="filters" value="stat,log4j" />
+      #+END_SRC
+    
+    + proxyfilters
+      #+BEGIN_SRC xml
+	<bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource"
+	      init-method="init" destroy-method="close">
+	  <property name="proxyFilters">
+	    <list>
+	      <ref bean="stat-filter" />
+	    </list>
+	  </property>
+	</bean>
+
+	<bean id="stat-filter" class="com.alibaba.druid.filter.stat.StatFilter">
+	  <!-- 可以针对filter的属性进一步配置-->
+	  <property name="" value="" />
+	</bean>
+      #+END_SRC
+      

@@ -1,0 +1,19 @@
+* Base64介绍
+    Base64是一种用64个字符来表示任意二进制数据的方法，最初的用途是在电子邮件传输过程中进行编码和解码
+
+    它的原理很简单：
+    1. 准备一个包含64个不重复字符的表，如标准替换表：[a-z, A-Z, 0-9, +,/]
+    2. 将输入字节流以3个字节为单位循环处理：
+       source : byte1[xxxx xxxx]  byte2[xxxx xxxx]  byte3[xxxx xxxx]
+    3. 将3个字节24个bit分为4组，每组6bit，对应的值正好是[0-63]，对应到替换表中的某个字符
+       split  : xxxxxx xxxxxx xxxxxx xxxxxx
+    4. 根据spit后映射的4个字符重新生成字节流
+       after  : new1[xxxx xxxx]  new2[xxxx xxxx]  new3[xxxx xxxx]  new4[xxxx xxxx]
+    5. 重复2-4直到原始字节流都被替换。
+
+    特别地，当原字节流不是3的倍数(最后剩1-2个字节)时，一律采用补0的方式凑足3的倍数，然后在转换后字符流末尾用等号代替补0产生的字节
+    | ASCII   |    S                                    |
+    | binary  |  01010011                               |
+    | spilt   |  010100    11                           |
+    | padding |  010100    110000    000000    000000   |
+    | after   |    U         w         =         =      |

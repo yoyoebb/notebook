@@ -1,0 +1,268 @@
+#+SETUPFILE: ~/.emacs.d/org-templates/level-2.org
+#+TITLE: Emacs
+
+* Emacs
++ Emacs是一个非常强大的定制化系统，它的底层其实就是ELISP函数，并且定义了大量的快捷键组合来控制相应的函数，这些快捷键遵循如下规则：
+  + 最常用的功能，使用: ~C+?~ ~M+?~
+  + 次常用的功能，使用: ~C+lead+?~  ~M+lead+?~
+  + 很少用的功能，使用: ~C+lead C+?~
+  + 偶尔用的功能，使用: ~M+x function~ 来执行
+  我们也可以自由地修改或定义自己的快捷键。
+
++ 另外，在系统内部也有一套完善的帮助功能(C+h ?)，对我们日常学习非常有用。
+  + C-h t :: 打开Tutal
+  + C-h k :: 查询指定key的功能
+  + C-h v :: 查询变量值
+  + C-h f :: 查询函数
+  + C-h m :: 查询Major Mode及其支持的minor mode
+
+** 基础概念
+*** Config
+  + 配置文件夹路径：~/.emacs.d/
+  + 初始化文件建议使用~/.emacs.d/init.el来取代~/.emacs
+
+*** Package管理
+Emacs一个迷人的地方就在于，因为它的高度定制化和扩展性，社区提供了很多各具特色的插件来丰富它的功能。从v24开始，采用了统一的包管理器机制，package都安装在~/.emacs.d/elpa/，更加方便管理。
+
+通过 ~M-x list-packages~ 可以列出GNU ELPA所有可用的包，但是GNU官方库的package实在是太少了，我们一般使用MELPA库来获取package。
+    
+*** Major Mode & Minor Mode
+Emacs通过Major Mode来分别处理不同类型的文件，通过Minor Mode来进行功能上的调整。
+  + 一些常见的Minor Mode
+    + linum-mode            是否显示行号
+    + menu-bar-mode         是否显示菜单栏
+    + tool-bar-mode         是否显示工具栏
+    + scroll-bar-mode       是否显示滚动条
+    + recentf-mode          保存最近打开过的文件
+    + electric-indent-mode  elisp设置缩进
+    + global-company-mode   激活company-mode
+
+** File & Buffer & Window
+*** File & Buffer
+  + ~C-x C-f~ 根据提示输入文件名后打开文件，如果文件名不存在，则创建新的文件。
+  + ~C-x k~ 关闭指定Buffer，如果Buffer还未保存会提示保存
+  + ~C-x C-c~ 退出Emacs，如果有未保存到文件的Buffer，则会提示保存
+  + kill-emacs 不提示保存并退出Emacs
+  + ~C-x s~ 针对有改动的Buffer，逐个提示是否需要保存
+  + ~C-x C+s~ 保存当前Buffer
+  + ~C-x b~ 切换Buffer
+  + ~C-x C+b~ 在新窗口列示目前打开的所有Buffer
+  + kill-some-buffers 遍历所有Buffer，逐个询问是否需要Kill
+  + recover-file 非正常退出后，从临时文件恢复
+*** Window
+  + ~C-x o~ 光标移动到下一窗口
+  + ~C-x 0~ 删除当前窗口
+  + ~C-x 1~ 删除所有非当前窗口
+  + ~C-x 2~ 垂直分割当前窗口
+  + ~C-x 3~ 水平分割当前窗口
+** Edit Operator
+*** 光标移动
+   #+BEGIN_EXAMPLE
+   Desc           Shortcut                  
+   -----------------------------------------------------
+   ->             C-f         往右移动一个字符 <Right>
+                  M-f         往右移动一个单词
+                  C-e         移动到行尾 <End>
+                  M-e         移动到句尾
+   -----------------------------------------------------
+   <-             C-b         往左移动一个字符 <Left>
+                  M-b         往左移动一个单词
+		  C-a         移动到行首 <Home>
+		  M-m         移动到本行首个非空字符
+                  M-a         移动到句首
+   -----------------------------------------------------
+   up             C-p         往上移动一行 <Up>
+                  C-v         往上翻页 <Page Up>
+                  M-<         移动到Buffer头 <C-Home>
+                  M-<Pg Up>   对其他窗口翻页
+   -----------------------------------------------------
+   down           C-n         往下移动一行 <Down>
+                  M-v         往下翻页 <Page Down>
+                  M->         移动到Buffer尾 <C-End>
+                  M-<Pg Down> 对其他窗口翻页
+   #+END_EXAMPLE
+
+*** 文本操作
+   #+BEGIN_EXAMPLE
+   Desc           Shortcut                  
+   --------------------------------------------------------
+   delete         C-d          删除光标位置的字符 <Del>
+                  <Backspace>  删除光标位置的前一字符
+   --------------------------------------------------------
+   kill           M-d          剪切光标位置到下一单词的所有字符          
+                  C-k          剪切光标位置到行尾的所有字符
+                  M-k          剪切光标位置到当前句尾的所有字符
+                  C-w          剪切所选区域内的所有字符
+   --------------------------------------------------------
+   select         C-<Space>    设置区域起始点
+                  C-x h        全选
+   --------------------------------------------------------
+   copy           M-w          复制所选区域的内容
+   paste          C-y          在光标位置粘贴所选区域的内容
+                  M-y          往前追溯上一次kill的内容并替换当前粘贴
+   --------------------------------------------------------
+   insert line    C-o          在光标位置换行 <Enter>
+   --------------------------------------------------------
+   undo           C-/          撤销上一次操作(可重复)
+   redo                             
+   #+END_EXAMPLE   
+** Hack Emacs by ELisp
+*** Elisp语法
+  * Elisp源文件的后缀为.el
+  * 基本语法：
+    #+BEGIN_QUOTE
+    设置变量：(setq cursor-type 'bar)
+              (setq-default cursor-type 'bar)  //xwindows
+        setq setq-default: emacs中有些variable是buffer-local(每个buffer都有一份)，对于这种变量，setq只能影响当前buffer，setq-default才能更改全局设置
+    定义函数: (defun open-init-file()
+                (interactive)
+                (find-file "~/.emacs.d/init.el"))
+        interactive means can M-x execute.
+    绑定快捷键：(global-set-key (kbd "<f2>") 'open-init-file)
+    修改minor mode : (linum-mode 1)
+    #+END_QUOTE
+  *让配置改动后生效
+    + M-x load-file  默认重新加载当前文件，回车两次即可
+    + M-x eval-buffer  执行当前缓冲区的所有Lisp命令
+    + C-x C-e  执行光标所在的Lisp函数(如果要执行整行，光标必须放在最后面)
+
+* Org
+** Structure
+我们将org中的heading、plain list、table视为通用结构。
+*** Common Shortcut
+ | shortcut         |             | headling       | list       | table     |
+ |------------------+-------------+----------------+------------+-----------|
+ | M-<RET>          | insert      | headling       | item       | row       |
+ | M-<left>/<right> | change      | headling level | item lever | column    |
+ | M-<up>/<down>    | move        | headling       | item       | row       |
+ | <TAB>            | open/folder | headling       | item       | cell move |
+ | S-<TAB>          | open/folder | headling all   | N/A        | cell move |
+  
+*** headings
+ + 顶格n个 \star +空格 ::  define n level headings
+ + C-c C-t :: toggle headings with TODO states.
+ + 在 headings之间移动
+   + C-c C-p :: 移动到上一个heading
+   + C-c C-n :: 移动到下一个heading
+   + C-c C-j :: 锁定模式，定义<up>/<down>对应当前open的headings之间移动
+ + M-S-<RET> :: insert a new TODO heading
+ + C-<RET>   :: insert a new headling with same level
+ + narrow buffer
+   + C-x n s   :: narrow to current subtree
+   + C-x n w   :: cancel narrow 
+
+*** plain lists
+   + unordered list items start with '-','+','*'
+   + ordered list items start with '1.' or '1)'
+   + M-S-<left>/<right> 可以调整item的缩进距离
+   + S-<left/right> - 光标位于list的bullet处，使其style在'-|+|*|1.|1)'之间切换
+   + C-c * 将list当前item变成当前headling的subheadling
+*** tables
+   table 示范：
+   | Name  | Phone | Age |
+   |-------+-------+-----|
+   | Peter |  1234 |  17 |
+   | Anna  |  4321 |  25 |
+
+ #+BEGIN_VERSE
+    #+CAPTION: this is the caption for the next table(or link)
+    #+NAME:    tab:basic-data
+       | ... | ... |
+       |-----|-----|
+ #+END_VERSE
+   + '|' 表示绘制表格
+   + '|-' 表示绘制水平线
+   + <Ret> 新增一行 
+   + C-c C-c 重新格式化table
+   + C-c SPC 清空当前Cell
+   + M-S-<left> kill当前column
+   + M-S-<right> 在左边新增column
+   + M-S-<up> kill 当前row
+   + M-S-<down> 在上方新增row
+** rich texts
+*** Paragraphs
+Paragraphs 段落之间至少要有一个空行，如果在一个段落内部需要分行，可以在指定行末尾使用'\\'。
+也可以使用预定义块来格式化输出，如：
++ '<v' 生成VERSE块
+#+BEGIN_VERSE
+  Great clouds overhead
+  Tiny black birds rise and fall
+  Snow covers Emacs
+
+      -- AlexSchroeder
+#+END_VERSE
+
++ '<q' 生成QUOTE块
+#+BEGIN_QUOTE
+Everything shoud be made as simple as possible,
+but not any simpler -- Albert Einstein
+#+END_QUOTE
+
++ '<c' 生成CENTER块
+#+BEGIN_CENTER
+Everything shoud be made as simple as possible, \\
+but not any simpler
+#+END_CENTER
+
++ '<e' 生成EXAMPLE块
+#+BEGIN_EXAMPLE
+Some example from a text file.
+: Some other example
+#+END_EXAMPLE
+
+*** Text Markup
+Text markup follows the pattern:
+#+BEGIN_EXAMPLE
+ PRE MARKER CONTENTS MARKER POST
+#+END_EXAMPLE
+ + PRE is a ~whitespce~, ~(~ , ~{~ , ~'~ , ~"~, 或者是行头。
+
+ + MARKER is ~*~ (bold), ~=~ (verbatim), ~/~ (italic), ~+~ (strike-through), ~_~ (underline), ~~~ (code).
+
+ + CONTENT is a string following the pattern: ~BORDER BODY BORDER~
+   - BORDER可以是除了 ~,~ , ~'~ , ~"~ , whitespace
+
+*** horizontal rules
+A line consisting of only dashes(>= 5)
+-----
+
+*** source code
+'<s' + <TAB> 自动插入源码块，常见语言包括:emacs-lisp, java, c, javascript
+'-n' 参数让代码块输出行号
+#+BEGIN_SRC java -n
+public static void main(String[] args){
+  ...
+}
+#+END_SRC
+
+我们还可以在代码块中定义'ref'标签，当导出HTML后，鼠标cover链接时，对应行会高亮显示。
+'-r' 参数是在输出时不显示'(ref)'代码
+#+BEGIN_EXAMPLE
+#+BEGIN_SRC emacs-lisp -n -r
+(save-excursion                   (ref:sc)
+   (goto-char (point-min)))       (ref:jump)
+#+END_SRC
+In line [[sc]] we remember the current position. [[jump][Line (jump)]]
+jumps to point-min
+#+END_EXAMPLE
+
+C-c '  在代码块类使用，可以让我们用单独的Buffer，对应的major-mode编辑代码，再次敲击快捷键后返回原文档
+
+*** special symbols
+org-mode中定义了一系列的"named entities"，对应一些常见的特殊字符，可以通过'\'+'named entities'来引用，如 ~'\alpha'~ 表示对应的希腊字母\alpha， ~'\to'~ 表示一个箭头\to。这些特殊字符在输出HTML或LaTeX时都会自动进行相应的转换。
+ + 在键入部分字符后可以通过 ~M + <TAB>~ 进行提示。
+ + 可以通过这种方式输出被转义的markup字符，如 ~'\under'~ \under、 ~'\tilde'~ \tilde、 ~'\equal'~ \equal、 ~'\star'~ \star
+ + M-x org-entities-help 可以查询所有的特殊字符定义 
+*** footnotes
+   #+BEGIN_EXAMPLE
+     The Org homepage[fn:1] now looks a lot better than it used to.
+     ...
+     [fn:1] The link is: http://orgmode.org
+   #+END_EXAMPLE
+** export
+*** export settings
+*** export html
+C-c C-e h h 输出.html文件
+C-c C-e h o 输出.html文件并通过浏览器打开
+ 
+* Evil

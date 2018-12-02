@@ -1,0 +1,430 @@
+#+SETUPFILE: ~/.emacs.d/org-templates/level-2.org
+#+TITLE: Maven
+
+* Maven介绍
+  Maven是目前Java界主流的项目构建工具，利用它可以完成创建工程目录、管理外部依赖、编译、测试、发布等一系列工作。Maven做的最好的就是管理外部依赖包。
+
+  目前的主流版本是Maven 3，截止2017年底的最新版本号是3.5.2。
+** Install
+  maven是一个纯java应用，它的安装非常简单。
+
+  + mac环境:
+    #+BEGIN_EXAMPLE
+    $ brew install maven
+    #+END_EXAMPLE
+  + windows环境:
+    #+BEGIN_EXAMPLE
+    1. 上官网下载发布包，解压缩到本地目录
+    2. 设置环境变量: 
+       MAVEN_HOME=?     // 配置maven目录，如：'D:\maven'
+       MAVEN_OPTS=?     // (可选)配置maven运行的JVM参数，如: '-Xms128m -Xmx512m'
+    3. 在path变量中添加 '%MAVEN_HOME%\bin;'
+    #+END_EXAMPLE
+
+  我们可以通过以下命令验证maven是否正确安装。
+  #+BEGIN_EXAMPLE
+  $ mvn -v
+
+  Apache Maven 3.5.2 (138edd61fd100ec658bfa2d307c43b76940a5d7d; 2017-10-18T15:58:13+08:00)
+  Maven home: /usr/local/Cellar/maven/3.5.2/libexec
+  Java version: 1.8.0_152, vendor: Oracle Corporation
+  Java home: /Library/Java/JavaVirtualMachines/jdk1.8.0_152.jdk/Contents/Home/jre
+  Default locale: en_CN, platform encoding: UTF-8
+  OS name: "mac os x", version: "10.13.2", arch: "x86_64", family: "mac"
+  #+END_EXAMPLE
+** Repository(仓库)
+  在Maven中，仓库是一个很重要的概念，它可以分为两大类：
+  1. local repository(本地仓库)，即保存在用户本地的仓库。
+  2. remoting repository(远程仓库)，又可以细分为:
+     + central repository(中央仓库) :: Maven默认的远程仓库(Super POM中引用)，可供所有人访问。由于maven默认的中央仓库在美国，访问速度比较慢，可以设置它在国内的镜像站来提高访问速度(settings.xml中配置mirror元素，或者配置repo来覆盖它)。
+     + private repository(私人仓库) :: 一般是公司架设的供局域网访问的仓库，通过私服可以避免重复请求外网，提高稳定性，加快构建速度，部署(deploy)公司内部组件。通常需要配置服务器验证信息才能访问(settings.xml中配置server元素)。
+
+       当前主流的Maven私服有：
+       + Apache的Archiva
+       + JFrog的Artifactory
+       + Sonatype的Nexus
+
+  我们可以在多个地方配置远程仓库，Maven启动时获取依赖jar的顺序是：
+  1. 本地仓库
+  2. settings.xml中auto-activated的profiles (reverse definition order)
+  3. settings.xml中CLI activated的profiles (reverse definition order)
+  4. pom.xml中的repos
+  5. parent pom中的repos
+
+  对于公司使用而言，最佳实践是架设maven私服，然后设置私服作为所有仓库的镜像，这样构建服务器将只会从私服获取依赖。
+
+** 版本管理：release & snapshot
+  Maven把仓库中的构件分为两类，release版本和snapshot，其区别在于，前者对应稳定的版本，其在仓库中只能发布一次，如果有bug，必须提供新的版本号；而后者对应开发中的活跃版本，同一个版本号可以发布多次，依赖时默认使用最新发布的snapshot版本。
+  
+  两者怎么区分？如果版本号后面加上大写 *-SNAPSHOT* ，那它就是snapshot版本，否则都是release版本。
+** PlugIn
+** settings配置文件
+  settings.xml是maven系统的配置文件，通过它我们可以配置本地仓库位置、server验证信息、profile、mirror、proxy等公用信息。它一般存在于两个位置：
+  + ${MAVEN_HOME}/conf/settings.xml - 全局配置，适用于所有用户
+  + ${user.home}/.m2/settings.xml - 用户配置，适用于当前用户
+
+  配置的优先级从高到低：project pom > user settings > global settings，如果这些文件同时存在，构建project时会合并它们的内容，如果有重复的配置，优先级高的配置会覆盖优先级低的配置。
+
+  settings.xml的根元素是<settings>。
+*** local repository
+  用于配置本地仓库位置，默认地址是 ~${user.home}/.m2/repository~
+   #+BEGIN_SRC xml
+   <!--必须是一个绝对路径-->
+   <localRepository>new directory</localRepository>
+   #+END_SRC
+*** offline
+  表示maven是否需要在离线模式下运行，可选值为:ture|false，默认为false。当由于网络设置原因或安全因素，构建服务器不能连接远程仓库时，该配置就十分有用。
+  #+BEGIN_SRC xml
+  <offline>false</offline>
+  #+END_SRC
+*** servers
+  当远程仓库需要授权访问时，用户名和密码不能也不应该放在pom里面，可以配置到settings.xml中。
+  #+BEGIN_SRC xml
+    <servers>
+      <server>
+	<id>repo-id</id>
+	<username>my_name</username>
+	<password>my_password</password>
+
+	<!--私钥位置，默认是${user.home}/.ssh/id_dsa -->
+	<privateKey>${user.home}/.ssh/id_dsa</privateKey>
+	<!--私钥密码-->
+	<passphrase>some_passphrase</passphrase>
+	<!--部署时如果创建了仓库文件或目录，对应的permission
+	    合法值是一个三位数字，对应了unix文件系统的权限，如664、775等-->
+	<filePermissions>664</filePermissions>
+	<directoryPermissions>775</directoryPermissions>
+      </server>
+    </servers>
+  #+END_SRC
+*** mirrors
+  为repo配置对应的镜像，可以使用通配符来匹配多个repo，我们访问对应的repo时，将使用镜像中的url进行替代。
+  #+BEGIN_SRC xml
+    <mirrors>
+      <mirror>
+	<id>alimaven</id>
+	<name>aliyun maven</name>
+	<url>http://maven.aliyun.com/nexus/content/groups/public/</url>
+	<!--被镜像的repo id，可以使用
+	    ,*            通配所有的repo
+	    external:*   everything not on the localhost and not file based
+	    repo,repo1   repo or repo1
+	    ,*,!repo1     everything except repo1
+	-->
+	<mirrorOf>central</mirrorOf>
+      </mirror>
+    </mirrors>
+  #+END_SRC
+*** profiles
+  POM是和project相关的，但其中有些配置在多个或所有project中都是通用的，这时可以在settings.xml中配置profile来实现共享。
+  #+BEGIN_SRC xml
+    <profiles>
+      <profile>
+	<!--profile的唯一标识-->
+	<id>test</id>
+	<!--设置profile自动生效的条件，见下方-->
+	<activation />
+    
+	<!-- 设置变量、repo、plugin-repo，和POM一致，见POM配置详解 -->
+	<properties />
+	<repositories />
+	<pluginRepositories />
+      </profile>
+    </profiles>
+  #+END_SRC
+  activation子元素的配置搭配还挺多，用到时再详细了解。另外，在project的pom.xml所在目录下执行 ~mvn help:active-profiles~ ，可以查看哪些profile在工程中生效了。
+  #+BEGIN_SRC xml
+    <activation>
+      <!-- 设置profile是否默认激活 true|false -->
+      <activeByDefault>false</activeByDefault>
+
+      <!-- 基于JDK版本激活，如：1.4激活JDK1.4, 1.4.0_2 -->
+      <jdk>1.5</jdk>
+
+      <!-- 基于OS激活 -->
+      <os>
+	<name>Windows XP</name>
+	<family>Windows</family>
+	<arch>x86</arch>
+	<version>5.1.2600</version>
+      </os>
+
+      <!--基于某个属性(其值可以在POM中通过${key}引用)，来激活profile -->
+      <property>
+	<name>mavenVersion</name>
+	<value>2.0.3</value>
+      </property>
+
+      <!--基于指定文件是否存在，来激活profile -->
+      <file>
+	<exists>${basedir}/file1.properties</exists>
+	<missing>${basedir}/file2.properties</missing>
+      </file>
+    </activation>
+  #+END_SRC
+*** activeProfiles
+  用于手动激活profile，如果在这里激活了，不管环境设置如何，其对应的profile都会生效。
+  #+BEGIN_SRC xml
+    <activeProfiles>
+      <!--要激活的profile id -->
+      <activeProfile>profile-id</activeProfile>
+    </activeProfiles>
+  #+END_SRC
+* Maven项目
+** 项目目录结构
+  maven项目遵循“约定大于配置”的原则，采用业界长期实践后最有效的目录结构，并为开发者提供了模版命令 ~mvn archetype:generate~ 。
+
+  + 创建标准java目录
+    #+BEGIN_EXAMPLE
+    $ mvn archetype:generate -DgroupId=xxx -DartifactId=xxx
+
+    project_root/
+        pom.xml
+        src/
+            main/
+	        java/
+	        resources/
+	        filters/
+	        assembly/
+	        config/
+	    test/
+	        java/
+	        resources/
+	        filters/
+	    site/
+        target/
+            classes/
+	    test-classes/
+	    site/
+    #+END_EXAMPLE
+
+  + 创建标准WEB目录
+    #+BEGIN_EXAMPLE
+    $ mvn archetype:generate -DgroupId=xxx -DartifactId=xxx -DarchetypeArtifactId=maven-archetype-webapp
+
+    a. packaging=war且带有junit依赖的pom.xml
+    b. src/main/webapp/
+    c. src/main/webapp/index.jsp
+    d. src/main/webapp/WEB-INF/web.xml
+    #+END_EXAMPLE
+** POM配置文件
+  POM - Project Object Model，是Maven项目的配置文件，类似于JAVA的对象，POM之间也存在继承关系，并且默认继承Maven系统lib中的Super POM。
+  #+BEGIN_EXAMPLE
+  Super POM在Maven 3的位置：
+  打开 ${MAVEN_HOME}/lib/maven-model-builder-${version}.jar
+  位于 /org/apache/maven/model/pom-4.0.0.xml
+
+  里面定义了:
+  * maven中央仓库
+  #+END_EXAMPLE
+
+  POM的根元素是<project>。
+*** modelVersion
+  POM Version(必须)，Maven 2&3目前唯一支持的版本就是4.0.0。
+  #+BEGIN_SRC xml
+  <modelVersion>4.0.0</modelVersion>
+  #+END_SRC
+*** groupId、artifactId、version
+  POM文件必备的三要素(如果是子Module，groupID、version都可以隐式继承自父POM)，这三个元素也称为Maven Project的坐标。
+  #+BEGIN_SRC xml
+  <groupId>org.ebb.www</groupId>
+  <artifactId>my-project</artifactId>
+  <version>1.0</version>
+  <description>my-desc</description>
+  #+END_SRC
+  + groupId代表公司，如：hk.com.hkex
+  + artifactId代表项目/子模块，如：ctcs-parent | ctcs-api | ctcs-cb-api...
+  + version表示版本号
+*** parent、modules、packaging
+  + parent元素用于引用父POM，同样通过三要素来定位，如果没有指定parent，默认继承Super POM。
+    #+BEGIN_SRC xml
+    <parent>
+        <groupId>...</groupId>
+	<artifactId>...</artifactId>
+	<version>...</version>
+    </parent>
+    #+END_SRC
+
+  + packaging元素用于指定project/module的打包方式。
+    #+BEGIN_SRC xml
+    <packaging>jar|war|pom</packaging>
+    #+END_SRC
+    + 如果不指定，默认是jar
+    + 父Project或父Module通常都指定为pom
+    + web Project或Module一般指定为war
+
+  + modules元素用于在多模块项目的rootModule中限定subModule，子模块可以通过parent继承rootModule(不是必须)，将各个功能拆分成子Module单独打包，方便服用。
+    #+BEGIN_SRC xml
+    <modules>
+        <module>sub-module-artifactId</module>
+	<module>third-project/pom-example.xml</module>
+	...
+    </modules>
+    #+END_SRC
+    常见的有:
+    + 单Web应用多Module
+      #+BEGIN_EXAMPLE
+      --app-parent
+           |--pom.xml  (packaging:pom)
+	   |--app-util
+	   |     |--pom.xml  (packaging:jar)
+	   |--app-dao
+	   |     |--pom.xml  (packaging:jar)
+	   |--app-service
+	   |     |--pom.xml  (packaging:jar)
+	   |--app-webapp
+	         |--pom.xml  (packaging:war)
+      #+END_EXAMPLE
+
+    + 多Web应用多Module(微应用架构)
+      #+BEGIN_EXAMPLE
+      --app-parent
+           |--pom.xml  (packaging:pom)
+	   |--app-api
+	   |     |--pom.xml  (packaging:pom)
+	   |     |--app-xxx-api
+	   |           |--pom.xml (packaging:jar)
+	   |--app-ws
+	   |     |--pom.xml  (packaging:pom)
+	   |     |--app-xxx-ws
+	   |     |     |--pom.xml (packaging:war)
+	   |     |--...
+	   |--...
+      #+END_EXAMPLE
+*** properties
+  通过properties元素，我们可以自定义key-value，并以${key}的形式来给其他元素赋值。
+  #+BEGIN_SRC xml
+  <properties>
+      <key>value</key>
+  </properties>
+  #+END_SRC
+  在POM中，一共有以下几种变量赋值的方式：
+  1. ${env.x} - 获取系统环境变量的值，如: ${env.PATH}
+  2. ${project.x} - 获取POM文件project根元素下的值，如: ${project.version}
+  3. ${settings.x} - 获取settings文件中根元素settings下的值，如:${settings.offline}
+  4. ${java.x} - 获取java.lang.System.getProperties()里面的值
+  5. ${key} - 获取properties元素下的值
+*** dependencies
+  管理project用到的外部依赖。
+  #+BEGIN_SRC xml
+    <dependencies>
+      <dependency>
+	<!--依赖包在Maven中的坐标-->
+	<groupId>junit</groupId>
+	<artifactId>junit</artifactId>
+	<version>4.0</version>
+
+	<!--默认是jar，一般不用设置-->
+	<type>jar</type>
+    
+	<!--指定依赖的范围(在范围内才会被添加进classpath)
+	    compile     - 默认值，in the all classpath(compile、test、runtime)
+	    provided    - in the compile、test classpath。意味着运行时由JDK或容器提供
+	    runtime     - in the runtime & test classpath
+	    test        - only in the test classpath
+	    system      - 类似provided，但必须提供jar的位置，maven不会去仓库搜索
+	-->
+	<scope>test</scope>
+	<!-- only valid when scope is system-->
+	<systemPath>${some path}</systemPath>
+
+	<!-- marks optional a dependency when this project itself is a dependency.
+	     e.g, project A depends on B to compile some functions.
+	     but these funcions may not be used at runtime,then A can mark B as optional,
+	     and when C depends on A, maven will provide A without including B.
+	-->
+	<optional>true</optional>
+
+	<!--手工排除依赖A的依赖，见下面-->
+	<exclusions />
+      </dependency>
+      ...
+    </dependencies>
+  #+END_SRC
+  #+BEGIN_SRC xml
+    <exclusions>
+      <exclusion>
+	<!-- 排除指定依赖，可以用*来排除所有依赖 -->
+	<groupId>xxx</groupId>
+	<artifactId>xxx</artifactId>
+      </exclusion>
+    </exclusions>
+  #+END_SRC
+
+  如果使用maven构建project，它要求所有的依赖都通过maven仓库管理，但有时候，我们会依赖一些无法从maven仓库获取的项目包(譬如某个jar由于闭源协议无法放在公共远程仓库)，这时有三种办法:
+  1. install the dependency locally using the install plugin。(适合个人级别)
+     #+BEGIN_EXAMPLE
+     mvn install:install-file -Dfile=non-maven-proj.jar -DgroupId=some.group -DartifactId=non-maven-proj -Dversion=1 -Dpackaging=jar
+     #+END_EXAMPLE
+  2. create your own private repository and deploy it there。 (适合公司级别)
+  3. set the dependency scope to *system* and define a *systemPath* (不推荐)
+*** repositories、pluginRepositories
+  指定project需要访问的远程仓库(中央仓库在Super POM中引用)，如需要验证信息，在settings文件中的server元素配置。
+  #+BEGIN_SRC xml
+    <!--插件仓库是<pluginRepositories> -->
+    <repositories>
+      <!--插件仓库是<pluginRepository> -->
+      <repository>
+	<!--远程仓库的唯一标识-->
+	<id>test-repo</id>
+	<name>repo name</name>
+	<!--远程仓库URL，以'protocol://hostname/path'的形式指定-->
+	<url>http://snapshots.maven.codehaus.org/maven2</url>
+
+	<!--用于处理发布版本/快照版本的下载，见下面-->
+	<releases />
+	<snapshots />
+    
+	<!--可选，用于兼容maven 1.x。maven 2&3都是默认布局
+	    default|legacy
+	-->
+	<layout>default</layout>
+      </repository>
+    </repositories>
+  #+END_SRC
+  maven针对发布版本和快照版本可以做不同的设置，但子元素都是相同的。
+  #+BEGIN_SRC xml
+    <!-- or <snapshots> -->
+    <releases>
+      <!-- true|false 表示该仓库是否为下载发布版本或快照版本开启，默认是true -->
+      <enabled>false</enabled>
+  
+      <!-- 检查依赖更新的频率，maven会比较本地POM和远程POM的时间戳
+	   always       - 每次构建都会去检查远程仓库是否更新
+	   daily        - 每天检查一次，默认值
+	   interval:X   - 以X分钟为间隔检查
+	   never        - 从不检查
+      -->
+      <updatePolicy>always</updatePolicy>
+
+      <!-- 当maven验证构件校验文件失败时怎么处理
+	   ignore       - 忽略
+	   fail         - 失败
+	   warn         - 警告，默认值
+      -->
+      <checksupPolicy>warn</checksupPolicy>
+    </releases>
+  #+END_SRC
+*** distributionManagement
+  指定project需要deploy的远程仓库，如需要验证信息，在settings文件中的server元素配置。可以设置release仓库和snapshot仓库
+  
+*** build、reporting
+** 依赖冲突
+  在使用Maven构建项目时，经常会碰到间接依赖的jar版本冲突，Maven采用的是"nearest wins strategy"(最短路径)。假设有个project my-project，它的依赖关系如下：
+  #+BEGIN_EXAMPLE
+  my-project
+      |--->A-->D:1.0
+      |--->B-->C-->D:2.0
+  #+END_EXAMPLE
+  根据最短路径策略，Maven将引入D:1.0，这就有可能导致运行时出现异常，此时我们需要手工去调整依赖关系，引入适当的版本。
+  + 显示加入D:2.0的依赖，这样基于最短路径，D:2.0获胜
+  + 在A的依赖中通过exclusions将D排除掉
+
+  我们可以通过在POM目录执行mvn命令来查看project的依赖树: ~mvn dependency:tree -Dverbose~
+
+** Maven常用命令
+*** life cycle
+*** update version
+*** display dependencies
+  + ~mvn dependency:tree~ :: 显示项目依赖树
+* Nexus搭建Maven远程仓库

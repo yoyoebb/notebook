@@ -1,0 +1,801 @@
+* Basic Concept
+** source file & class file
+    Java语言中，source file为.java文件，经过编译后的字节码文件为.class文件。
+
+** source file structure
+    编写.java文件时，从上往下可以分为三个部分:
+    1. package语句，申明class所属的包，如果不申明则表示该类属于默认包(Bad Idea)，因为：
+       - 非默认包不可以import默认包
+       - 可以通过反射来使用默认包
+       #+BEGIN_SRC java
+   	 package ebb.javase.basic.version14;
+       #+END_SRC
+
+    2. import部分，用于引入其他包下的public class/field/method，目的是简化程序代码。（java.lang下的类默认自动引入）
+       有以下几种用法：
+       #+BEGIN_SRC java
+         // 引入类，两者效率上没有区别，第一种更清晰
+  	 import java.util.ArrayList;   // single type import
+	 import java.io.*;             // type import on demand
+
+	 // 引入静态成员
+	 import static java.lang.System.out;  // static import (JSE 5.0)
+       #+END_SRC
+
+    3. Class类型部分，定义class/interface/enum/annotation及其body
+       first java Class : Hello.java
+       #+BEGIN_SRC java
+         package com.ebb.j2se;
+
+	 import java.util.*;
+
+	 public class Hello{
+	     public static void main(String[] args){
+             System.out.println("Hello World!") ;
+	     }
+	 }
+       #+END_SRC
+
+    Java中同样支持注释
+    #+BEGIN_EXAMPLE
+    // this is a single line comment.
+    
+    /*
+       this is a muti-line comment.
+    */
+
+    /**
+       this is a java doc comment.
+    */
+    #+END_EXAMPLE
+
+** keyword
+    在java中，以下单词被jdk视为关键字，不能用于命名。
+    | 系统保留   | const     | goto         |         |
+    | 源文件结构 | package   | import       |         |
+    |            | class     | interface    | enum    |
+    |            | extends   | implements   |         |
+    | 访问修饰符 | public    | protected    | private |
+    | 其他修饰符 | abstract  | static       | final   |
+    |            | transient | valatile     |         |
+    |            | native    | synchronized |         |
+    | 基本类型   | byte      | short        |         |
+    |            | int       | long         |         |
+    |            | float     | double       |         |
+    |            | char      | boolean      |         |
+    | 布尔值     | true      | false        |         |
+    | 空类型     | void      | null         |         |
+    | 分支       | if        | else         |         |
+    |            | switch    | case         | default |
+    | 循环       | for       | do           | while   |
+    | 控制       | break     | continue     | return  |
+    | 类操作     | new       | instanceof   |         |
+    |            | this      | super        |         |
+    | 异常       | try       | catch        | finally |
+    |            | throw     | throws       | assert  |
+
+** primitive types
+    java中存在以下基本类型，这些类型的变量在堆栈中的内存地址存储的是值本身，而不是heap地址值(区别于引用变量)。
+    | Type    | Size(bit) | Range          | default       | Wrapper   |
+    |---------+-----------+----------------+---------------+-----------|
+    | boolean |           |                | false         | Boolean   |
+    | char    |        16 | 0 - 65535      | '\u0000'-null | Character |
+    |---------+-----------+----------------+---------------+-----------|
+    | byte    |         8 | -128 - 127     | (byte)0       | Byte      |
+    | short   |        16 | -32768 - 32767 | (short)0      | Short     |
+    | inter   |        32 | max 20亿       | 0             | Integer   |
+    | long    |        64 | very large     | 0L            | Long      |
+    |---------+-----------+----------------+---------------+-----------|
+    | float   |        32 | 6-7位精度      | 0.0f          | Float     |
+    | double  |        64 | 15位精度       | 0.0           | Double    |
+
+    - 浮点数精度遵循IEEE 754标准，参考Number.org
+    - 自动拆包/装包(JSE5.0)，基本类型和包装类自动转换
+    - boolean和数字不会像C++一样自动转型，所以 if(x=0) 在Java中会报编译错误
+   
+** variable & literal const
+*** variable
+    java是强类型语言，在定义变量时需要指定其类型(primitive or Class)。命令变量时有以下规则： ~以('A-Za-z'、'_'、'$')开头，后面可以跟前述字符或数字~ 。(虽然变量名可以包含'$'，但因为编译器或其他工具常用'$'来命名自动生成的变量，应用中最好避免使用)
+
+*** literal const
+    java源码中有以下几种常量
+    + 数字型常量
+      整数或小数，默认为十进制。
+      #+BEGIN_SRC java
+	// 整数常量(默认int类型)
+	// 数字可以使用'_'间隔便于阅读，如'1_000_000'代表一百万(JSE 7.0)
+	byte byteVar = 123 ;
+	short shortVar = 12_345 ;
+	int intVar = 123_456;          
+	long longVar = 3_123_456_789L; // l/L表示long常量
+
+	// 浮点数常量(默认double类型)
+	float floatVar = 123.45f;      // f/F表明为float常量
+	double doubleVar = 123.456;    
+      #+END_SRC
+    + 字符常量
+      用单引号括起来的字符常量，可以通过'\'转义输出特殊字符，还可以通过'\u+XXXX'(两位16进制码位)来表示unicode字符(可以在源码任意位置使用，甚至不需要单引号)。
+      #+BEGIN_SRC java
+	char charVar1 = 'a';        // 单个字符
+	char charVar2 = '\n';       // 转义为换行符
+	char charVar2 = '\u0XAB'    // unicode字符值
+
+	// \u000A
+      #+END_SRC
+      常见转义字符有：
+      | '\n' - linefeed(换行)       | '\r' - carriage return(回车) |
+      | '\b' - backspace(空格)      | '\t' - tab(制表符)           |
+      | '\"' - double quote(双引号) | '\'' - single quote(单引号)  |
+      | '\\' - backslash(反杠)      |                              |
+    + 字符串常量
+      用双引号括起来的多个字符常量，如："ABC"。它同样支持反斜杠转义。
+      #+BEGIN_SRC java
+	String strVar = "这是一个字符串";
+      #+END_SRC
+
+    在JVM规范中，定义了编译时常量池和运行时常量池，都位于方法区内。
+    + 整数型包装类的常量池(-128 - 127)
+    + 源码中出现的字符串常量，在编译时保存到字符串常量池
+    + 运行时调用String.intern()方法，将对应字符串保存到字符串常量池
+    指向常量池对象的变量，具有相同的内存地址。(用 '==' 比较返回 'true') 
+
+** operator & priority
+*** 数学运算
+    #+BEGIN_SRC java
+      // + - * / %
+      int a = 1 + 1 ;   // add 
+      int b = 1 - 1 ;   // substract
+      int c = 2 * 2 ;   // multiply
+      int d = 4 / 2 ;   // divide
+      int e = 5 % 2 ;   // integer remainder
+
+      int x += a ;      // += -= *= /= %=
+    #+END_SRC
+    更复杂的数学操作，如开方(square root)、幂乘(power)、三角函数等，都定义为Math的方法。
+
+    还有从C流传下来的自增(++)/自减(--)
+    #+BEGIN_SRC java
+      int m = 7 ;
+      int n = 7 ;
+      int a = 2 * ++m ;  //先加再计算  a=16, m=8
+      int b = 2 * n++ ;  //先计算再加  b=14, n=8
+    #+END_SRC
+*** 关系运算和布尔运算
+    关系运算符(6种) 
+    #+BEGIN_EXAMPLE
+      >   >=     
+      <   <=
+      ==  !=
+    #+END_EXAMPLE
+
+    布尔运算符(3种) : 逻辑与、逻辑或、逻辑非
+    #+BEGIN_EXAMPLE
+      &&   ||   !
+    #+END_EXAMPLE
+
+    三元运算符
+    #+BEGIN_EXAMPLE
+      x > y ? x : y ;
+    #+END_EXAMPLE
+
+*** 位运算
+    #+BEGIN_EXAMPLE
+      &    and
+      |    or
+      ^    xor
+      ~    not
+
+      >>   右移
+      <<   左移
+      >>>  无符号右移
+    #+END_EXAMPLE
+    '&' 和 '|' 也可以作为逻辑与和逻辑或的操作符，区别在于，'&&'、'||'会断路，而'&'、'|
+    位操作符同样支持与赋值操作符连用。
+*** priority
+    #+BEGIN_EXAMPLE 
+      priority           operator                                  associativity
+      ---------------------------------------------------------------------------
+	 0             [] . ()(method call)                             ->
+	 1             ! ~ ++ -- +(unary) -(unary) ()(cast) new         <-
+	 2             * / %                                            ->
+	 3             + -                                              ->
+	 4             << >> >>>                                        ->
+	 5             < <= > >= instanceof                             ->
+	 6             == !=                                            ->
+	 7             &                                                ->
+	 8             ^                                                ->
+	 9             |                                                ->
+	10             &&                                               ->
+	11             ||                                               ->
+	12             ?:                                               <-
+	13             = += -=...                                       <- 
+    #+END_EXAMPLE
+** control flow
+*** block scope
+    在代码中嵌套block {}，block块中申明的变量其作用域也止于该block，同时子block中无法申明已经存在于父block的变量名。
+    #+BEGIN_SRC java
+      public static void main(String[] args){
+	int n ;
+	...
+	{
+	   int k ;
+	   int n ;     // error!
+	   ...
+	}
+      }
+    #+END_SRC
+*** condition(if)
+    #+BEGIN_SRC java
+      if (a > b){
+	  ...;
+      }else if(a ==b){
+	  ...;
+      }else{
+	  ...;
+      }
+
+    #+END_SRC
+*** condition(switch)
+    #+BEGIN_SRC java
+      switch(var){
+	case a :
+	   ...
+	   break ;
+	case b :
+	   ...
+	   break ;
+	default :
+	   ...
+	   break ;
+      }
+    #+END_SRC
+    - var可以是(char、byte、short、int)，枚举类型(JSE5.0)，String(JSE7.0)
+    - 如果case语句没有带break，它会按循序继续执行下一个case而不是跳出switch
+    - 如果所有case都没有匹配，则会进入default语句
+*** loop(while)
+    #+BEGIN_SRC java
+      //先判断再执行
+      while (condition){     
+	 ...
+      };
+
+      //先执行再判断
+      do {
+	  ...
+      } while (condition);
+    #+END_SRC
+*** loop(for)
+    for循环一般是while循环的简洁写法。
+    #+BEGIN_SRC java
+      for (int i = 1; i <= 10; i++){
+	  ...
+      }
+    #+END_SRC
+
+    foreach(JSE5.0)可以很方便地遍历数组或集合(需实现Iterable接口)，而且无需担心指定错误的索引边界值。但不适用于需要遍历部分元素，或需要使用index的场景。  
+    #+BEGIN_SRC java 
+      // for (variable:collection) statement
+      for(int element : a){
+	  System.out.println(element) ;
+      }
+    #+END_SRC
+*** out of loop(break & continue)
+    break用于跳出当前循环体，和label指定搭配可以实现goto的效果。
+    continue用于跳过本次循环
+    #+BEGIN_SRC java
+      read_data :
+      while(...){
+	  if(a)
+	      continue;
+	  for(...){
+	      if(condition){
+		  break read_data ;
+	      }
+	  }
+      }
+    #+END_SRC
+    
+
+* Complicated Type
+    Java不同于传统面向对象编程语言(如C)的地方在于，它是一门面向对象语言(OO)，class是Java中的一等公民，所有的字段、方法都必须在class内部声明、定义。
+
+    Complicated Type可以分为: class、interface、enum、annotation
+** class
+    class是java中最普遍的复杂类型，在其中可以定义member(field、constructor、method、sub class/enum/interface/annotation等)。
+    所有的class都默认继承 ~java.lang.Object~ 。
+    
+    一个简单的例子：
+    #+BEGIN_SRC java
+      package com.ebb.eg;
+
+      public class Employee{
+	public Employee(String n, double s, int year, int month, int day){
+	  this.name = n ;
+	  this.salary = s ;    // let's ignore precise problem first.
+	  this.hireDay = LocalDate.of(year,month,day) ;
+	}
+
+	// 当调用成员方法时，对象地址会implicit传入，并赋给this指针。
+	public String getName(){
+	  return this.name ;
+	}
+
+	public LocalDate getHireDay(){
+	  // Bad! LocalDate对象并非Immutable，可以被外部修改
+	  return this.hireDay ;   
+	}
+
+	public void raiseSalary(double byPercent){
+	  double raise = this.salary * byPercent / 100 ;
+	  this.salary = raise ;
+	}
+      }
+    #+END_SRC
+    
+    class和class之间通常有以下关系：
+    - Dependence ("use a")
+    - Aggregation ("has a")
+    - Inheritance ("is a")
+
+** interface
+    由于class采用的是单根继承，很多时候我们需要为多个类添加一些相同的特性但又不适合放在superclass中，这时可以使用interface来满足要求，class可以实现(implements)任意多的接口。
+
+    在Java领域，面向接口编程是一种很常见的设计模式。让我们看一个标准库的例子:
+    #+BEGIN_SRC java
+      public interface Comparable<T>{
+        int compareTo(T other) ;
+      }
+    #+END_SRC
+  
+    interface有很多特性：
+    + interface之间可以继承(extends)，并且允许多重继承
+    + 如果class implements interface，要么实现接口的全部方法，要么声明为abstract class
+    + 定义的field自动为 ~public static final~
+    + 可以定义三种类型的方法
+      1. 普通方法，自动为 ~public abstract~
+      2. 静态方法(JSE 8.0)，声明为 ~public static~ 并且提供方法实现，用于减少类型对应的工具类
+      3. 默认方法(JSE 8.0)，声明为 ~default~ 并且提供方法实现，用于减少抽象类
+
+    有了默认方法后，很容易和父类或其他接口出现method冲突，这时有两个原则:
+    1. 父类优先：如果父类定义了相同的方法，那么接口默认方法自动被忽略。
+    2. 接口冲突：如果一个接口定义了默认方法，另一个类实现的接口也定义同名方法，则报编译异常，让程序员手动去override该方法
+*** 标准库常用的接口
+ + Compare
+   + ~java.lang.Comparable<T>~ :: 实现了Comparable的class，其对象可以和同类型另一个对象互相比较。
+     #+BEGIN_EXAMPLE
+     int compareTo(T o)
+     当this  > o，返回正数；
+     当this == o, 返回0；
+     当this  < o, 返回负数；
+     #+END_EXAMPLE
+   + ~java.util.Comparator<T>~ :: 实现了Comparator的class，其对象可以用于比较另外两个指定类型的对象。
+     #+BEGIN_EXAMPLE
+     int compare(T first, T second)
+     当first  > second，返回正数；
+     当first == second, 返回0；
+     当first  < second, 返回负数；
+     #+END_EXAMPLE
+   有时候某个class可能需要多种排序方式，这时光实现Comparable显然不够，我们可以通过提供Comparator的不同实现方式去满足需求。很多工具类也提供基于两种方式的排序方法，如： ~java.util.Arrays~ 就提供 sort(array) 和 sort(array, comparator)。
+ + Clone
+   + ~java.lang.Clonable~ :: 标记接口，没有定义具体方法，但实现了该接口的class意味着它override了Object.clone方法及提供了public访问，其对象可以克隆(shallow clone or deep clone)，详见Object.clone
+** enum
+    枚举类型是JSE 5.0的新特性之一，它的主要特点是：因为不能定义非private构造方法，实例对象在一开始就已经确定，无法创建新的实例对象。所以对于两个枚举类型变量，我们可以直接使用'==' 来比较其是否相同。
+    #+BEGIN_SRC java
+      // 其属性默认为public static final
+      public enum Size{SMALL, MEDIUM, LARGE;}
+    #+END_SRC
+    所有的enum都默认强制继承 ~java.lang.Enum<E>~ ，不能再继承其他类，但可以implements interface，也可以添加field、method和constructor(必须是private)。
+
+    从Enum继承的两个便利方法：
+      - 静态方法：values()  - 返回所有实例的数组
+      - 成员方法：ordinal() - 返回实例对象在枚举类中声明的顺序号
+    
+    #+BEGIN_SRC java
+      public enum Size{
+	SMALL("S"),MEDIUM("M"),LARGE("L");
+
+	private String abbreviation;
+
+	private Size(String abbr){this.abbreviation = abbr ;}
+
+	public String getAbbr(){return this.abbreviation ;}
+      }
+
+      // values()返回实例对象的数组
+      Size[] values = Size.values() ;
+      // ordinal()返回实例对象的序号
+      int i = Size.SMALL.ordinal() ; // i == 0
+    #+END_SRC
+** annotation
+** 一些设计原则
+  + 定义类的一些原则：
+    + Always keep data private
+    + Always initialize data
+    + Don't use too many basic types in a class
+    + Not all fields need individual accessors and mutators
+    + Break up classes that have too many responsibilities
+    + Make the names of your classes and methods reflect their responsibilities
+    + Prefer immutable classes
+  
+  + 继承类的一些原则： 
+    + Place common operations and fields in the superclass
+    + Don't use protected fields
+    + Use inheritance to model the "is-a" relationship
+    + Don't use inheritance unless all inherited methods make sense
+    + Don't change the expected behavior when you override a method
+    + Use polymorphism, not type information
+    + Don't overuse reflection
+  更多的设计类的方法，可以参考设计模式  
+
+
+* Class Member
+** modifiers
+    在定义class、field、method时，可以通过各种修饰符来控制其含义。 
+    | modifiers    | class | constructor | field | method |
+    |--------------+-------+-------------+-------+--------|
+    | public       | Y     | Y           | Y     | Y      |
+    | protected    | -     | Y           | Y     | Y      |
+    | <default>    | Y     | Y           | Y     | Y      |
+    | private      | -     | Y           | Y     | Y      |
+    |--------------+-------+-------------+-------+--------|
+    | final        | Y     | -           | Y     | Y      |
+    | static       | -     | -           | Y     | Y      |
+    | abstract     | Y     | -           | -     | Y      |
+    |--------------+-------+-------------+-------+--------|
+    | transient    | -     | -           | Y     | -      |
+    | volatile     | -     | -           | Y     | -      |
+    |--------------+-------+-------------+-------+--------|
+    | native       | -     | -           | -     | Y      |
+    | synchronized | -     | -           | -     | Y      |
+    |--------------+-------+-------------+-------+--------|
+*** access modifiers   
+    访问修饰符，可以修饰class、field、method，用于控制外部访问。
+    public : 本包的类(含子类)、外包的类(含子类)都可以访问和继承。
+    protected : 本包的类(含子类)可以访问和继承、外包的子类可以继承。
+    <default> : 本包的类(含子类)可以访问和继承。
+    private : 类内部才可以访问。
+    
+    #+BEGIN_EXAMPLE
+      考虑有以下四个类:
+      p1.A                 
+      p1.B
+      p2.C extends p1.A    
+      p2.D
+
+      假设A有字段a1，方法m1
+      对于A而言，不管a1，m1的访问修饰符是什么，在A内部都可以访问A，a1，m1
+      对于B而言，只要a1,m1不为private，在B内部都可以访问A, A/a.a1, A/a.m1
+      对于C、D而言,如果A为public(否则C、D无法访问/继承A)
+	 1. a1,m1为public，则C、D内部可以访问 A/a.a1, A/a.m1
+	 2. a1,m1为protected, 对D不可见
+	    2.1 如果a1,m1为static，则C内部可以访问A.a1, A.m1或a1, m1
+	    2.2 如果a1,m1为member，则C内部可以访问a1, m1，但不能访问a.a1, a.m1
+		所以我们在class C1中无法调用C2.clone()，除非 C2 override了clone()
+	 3. a1,m1为<default>或private，则对C、D都不可见
+    #+END_EXAMPLE
+
+    class只能被public和<default>修饰，一个java源文件可以有一个public class和多个<default> class，public class名称必须与源文件名称相同，但也可以只定义<default> class。
+
+    申明为protected的方法和字段，可以被本包其他类通过类对象访问，但不能被外部package的类(包括子类)通过类对象访问，只能被外包子类继承。
+
+*** final / static / abstract
+    final 可以修饰class、field(member、method parameter、local variable)、method。
+    + 修饰class时，表示该类不能被继承(所有method默认为final method)。
+    + 修饰field时，表示该字段初始化后不能被修改(对于引用对象时，仅保证引用不会指向别的对象，但不代表引用的对象属性不能更改(mutable 对象))。
+    + 修饰method时，表示该方法不能被子类override。
+    + final修饰member field和class field时，必须被显性初始化。
+
+    static 可以修饰field、class
+    + 修饰field时，定义为class field，在class首次加载的时候被初始化。
+    + 修饰method时，表示为class method，可以通过class.method直接访问。
+
+    abstract 可以修饰class、method
+    + 修饰class时，表示该类为抽象类，里面可以有0到多个abstract method，抽象类不能被实例化。
+    + 修饰method时，表示该方法为抽象方法，只有方法申明而没有实现(需要子类去实现)，类中只要有1个抽象方法，该类就必须被申明为抽象类。
+
+    修饰符连用注意：
+    由于final类的所有方法,非final类的private method都无法被继承，static method无法被override，这些方法都默认为final。
+*** transient / volatile (for field)
+    transient 
+    告诉编译器，在对象序列化时，该变量不需要持久保存。
+    
+    volatile 
+    可能有多个线程修改此变量，要求编译器优化以保证对此变量的修改能够被正确地处理。
+*** native / synchronized （for method)
+    native
+    申明本地方法，方法底层通过C/C++实现
+
+    synchronized
+    同步方法，需要获取对象锁才可以进入(多个同步方法共享对象锁)。
+** field
+    member field即使没有初始化，在构造对象的时候也会被隐式初始化为类型默认值(0,false,null)
+*** constant
+    使用 ~final~ 关键字来声明常量(常量一般作为类的静态成员变量并对外公开)。其特点是一旦被初始化后无法再修改变量值。常量名通常使用 大写字母+‘_' 。
+    #+BEGIN_SRC java
+      public static final double CM_PER_INCH = 2.54 ;
+    #+END_SRC
+** constructor
+    构造方法用于初始化类对象。
+    + 与类同名，无返回类型，不能抛异常
+    + 可以定义访问修饰符
+    + 当没有定义构造器方法时，系统会提供默认的无参构造方法
+    + 构造方法可以且只能在第一行用super(...)/this(...)调用父类/本类的其他构造方法 
+    + 如果父类没有定义无参构造方法，那么子类构造方法第一行必须用super(...)显式调用父类的构造方法
+** method
+    Java中方法参数传递使用by value，也就是形参的值是实参值的复制，而不是实参的内存地址，实参和形参的值互不干扰(如果是引用类型，两者指向同一堆对象)。
+*** static method
+    静态方法有几个用途：1.无需成员变量的方法。2.静态工厂
+*** 可变参 (JSE 5.0)
+    0-n个同类型参数，可变参必须作为参数列表的最后一个参数
+    #+BEGIN_SRC java
+      // values在方法内部视为一个double类型数组，参数数量 == values.length
+      public static double max(double... values){
+        if(values.length > 0){
+          ...;
+	}
+      }
+    #+END_SRC
+** inner classes
+    inner class是在普通class内部定义的class。为什么我们想使用inner class，主要出于三个目的：
+    1. Inner class methods can access the data from the scope in which they are defined -- including the data that would otherwise be private.
+    2. Inner classes can be hidden from other classes in the same package.
+    3. Anonymous inner classes are handy when you want to define callbacks without writing a lot of code.
+*** normal inner class
+    让我们先看一个inner class的例子：
+    #+BEGIN_SRC java
+      package innerClass ;
+
+      import java.awt.*;
+      import java.awt.event.*;
+      import java.util.*;
+      import javax.swing.*;
+      import javax.swing.Timer;
+
+      public class InnerClassTest{
+	  public static void main(String[] args){
+	      TalkingClock clock = new TalkingClock(1000, true) ;
+	      clock.start() ;
+
+	      // keep program running until user selects "Ok"
+	      JOptionPane.showMessageDialog(null, "Quit program?") ;
+	      System.exit(0) ;
+	  }
+      }
+
+      class TalkingClock{
+	  private int interval ;
+	  private boolean beep ;
+
+	  public TalkingClock(int interval, boolean beep){
+	      this.interval = interval ;
+	      this.beep = beep ;
+	  }
+
+	  public void start(){
+	      // this.new TimePrinter() ;
+	      ActionListener listener = new TimePrinter() ;
+	      Timer t = new Timer(interval, listener) ;
+	      t.start() ;
+	  }
+
+	  // inner class
+	  public class TimePrinter implements ActionListener{
+	      public void actionPerformed(ActionEvent event){
+		  System.out.println("At the tone, the time is " + new Date());
+		  // beep == TalkingClock.this.beep
+		  if (beep)
+		      Toolkit.getDefaultToolkit().beep() ;
+	      }
+	  }
+      }
+    #+END_SRC
+    inner class有很多不同于普通类的特性：
+    + inner class 可以使用所有的访问修饰符
+    + 每个inner class的实例对象都指向outer class的某个实例对象，并可以访问其private field和method(可以显示写为OutClass.this.xxx)
+    + inner class的构造方法可以显示通过outerObject.new InnerClass()来调用，当inner class可见时，可以通过OutClass.InnerClass来申明其类型：
+      #+BEGIN_EXAMPLE
+        TalkingClock jabberer = new TalkingClock(1000, ture) ;
+        TalkingClock.TimePrinter listener = jabberer.new TimePrinter() ;
+      #+END_EXAMPLE
+    + inner class中定义的static field必须为final
+    + inner class中不允许定义static method
+
+*** inner class的实质
+    inner class看起来很神秘，但其实JVM并没有inner class的概念，只是编译过程中会对inner class、outer class做一些特殊处理：
+    + 编译器会把inner class 编译成一个单独的OuterClass$InnerClass.class，对这个class使用 ~javap -private~ ，可以看到以下结果
+      #+BEGIN_SRC java
+      public class TalkingClock$TimePrinter{
+          // 传入outer指针
+	  public TalkingClock$TimePrinter(TalkingClock) ;
+
+	  public void actionPerformed(java.awt.event.ActionEvent) ;
+
+	  // for the reference to the outer class object
+	  final TalkingClock this$0 ;
+      }
+      #+END_SRC
+    + 编译器会在outer中自动生成一个static方法并把outer实例作为参数传入，inner实际是通过该static方法访问outer的private field/method。
+      #+BEGIN_SRC java
+      class TalkingClock{
+	  private int interval ;
+	  private boolean beep ;
+
+	  public TalkingClock(int, boolean);
+
+	  // compiler在class文件中自动生成的方法
+	  static boolean access$0(TalkingClock) ;
+
+	  public void start() ;
+      }
+      #+END_SRC
+    + outer class的静态方法无法在代码中合法使用，但有经验的人可以通过直接构造同包的class文件来调用该静态方法并获取private field，所以存在安全风险。
+*** local inner class
+    如果inner只会在outer的单个方法中使用，我们可以将其定义为local inner class
+    #+BEGIN_SRC java
+    // before JSE 8, the beep should be defined as final
+    public void start(int interval, boolean beep){
+	// local inner class
+	class TimePrinter implements ActionListener{
+	    @Override
+	    public void actionPerformed(ActionEvent event){
+		System.out.println("At the tone, the time is " + new Date());
+		// the beep is defined as parameter of outer class method start.
+		if(beep)
+		    Toolkit.getDefaulttoolkit().beep() ;
+	    }
+	
+	}
+
+	ActionListener listener = new TimePrinter() ;
+	Timer t = new Timer(interval, listener) ;
+	t.start() ;
+    }
+    #+END_SRC
+    相比normal inner class，local inner class有以下限制：
+    + 不能定义访问修饰符
+    + 只在定义的方法内部可见
+    + local inner class可以访问所在方法的局部变量，但该局部变量必须是effectively final(before JSE 8, 必须声明为final)
+
+    为什么local inner class引用的外部方法局部变量必须等效final？看下之前示例的实际流程:
+    1. The ~start()~ is called
+    2. The reference ~listener~ is initialized by a call to the constructor of the inner class ~TimePrinter~
+    3. The reference ~listener~ is passed to the ~Timer~ constructor
+    4. The ~timer~ is started and the ~start()~ exits(means the local variable ~beep~ no longer exists.)
+    5. Then the ~actionPerformed()~ executes ~if (beep)...~
+  
+    编译器在编译inner class，会自动生成对应的final member field并通过自动生成的constructor将外部方法的局部变量传进去进行赋值，而从程序员角度看上去，就好像inner class直接访问了外部方法的局部变量。为了保证这两个变量的值相同，规范要求局部变量也必须是final
+
+    final的限制有时候会很不便利，考虑以下场景：
+    #+BEGIN_SRC java
+      int counter = 0 ;
+      Date[] dates = new Date[100] ;
+      for (int i=0; i< dates.length; i++)
+          dates[i] = new Date()
+	      {
+		  public int compareTo(Date other){
+		      counter++;    //Error
+		      return super.compareTo(other) ;
+		  }
+	      };
+      Arrays.sort(dates) ;
+      System.out.println(counter + " comparisons.") ;
+    #+END_SRC
+    这时我们可以将 ~int counter~ 声明为 ~int[ ] counter = new int[1]~ 来绕开限制。其实JDK最初的自动转换也是这样的，但是马上被放弃了，因为这种做法很危险，在多线程环境下执行 concurrent update 会导致 race condition(竞争条件)。
+*** anonymous inner class
+    如果local inner class在外部方法内仅仅使用一次，我们可以更往前走一步，使用anonymous inner class。
+    #+BEGIN_SRC java
+    // before JSE 8, the beep should be defined as final
+    public void start(int interval, boolean beep){
+
+	ActionListener listener = new TimePrinter(){
+	    @Override
+	    public void actionPerformed(ActionEvent event){
+		System.out.println("At the tone, the time is " + new Date());
+		if(beep)
+		    Toolkit.getDefaulttoolkit().beep() ;
+	    }
+	} ;
+	Timer t = new Timer(interval, listener) ;
+	t.start() ;
+    }
+    #+END_SRC
+    anonymous inner class 相比 local inner class 有了更多的特性：
+      + 格式是： ~new SuperType(construction parameters){...}~ Or ~new InterfaceType(){...}~
+      + 没有构造方法(因为没有类名)
+      + 编译后的class名为OuterClass$n (n=1,2,3...)
+
+    在之前，程序员一般采用annonymous inner class来实现事件监听或者其他的callback接口，但从JSE 8开始，最好是采用lambda experssion，如:
+    #+BEGIN_SRC java
+    public void start(int interval, boolean beep){
+	Timer t = new Timer(interval, event ->{
+		System.out.println("At the tone, the time is " + new Date());
+		if (beep)
+		    Toolkit.getDefaultToolkit().beep();
+	    });
+	t.start() ;
+    }
+    #+END_SRC
+
+    anonymous inner class的一些小技巧：
+    1. double brace initialization
+       #+BEGIN_EXAMPLE
+       ArrayList<String> friends = new ArrayList<>() ;
+       friends.add("Harry") ;
+       friends.add("Tony") ;
+       invite(friends) ;
+
+       // 可以简写成：
+       invite(new ArrayList<String>(){{add("Harry");add("Tony");}}) ;
+       // the outer braces make an anonymous suber class of ArrayList
+       // the inner braces are construction block 
+       #+END_EXAMPLE
+
+    2. get outer class
+       #+BEGIN_EXAMPLE
+       // 有时候我们需要获取class name
+       System.err.println("Something awful happened in " + getClass()) ;
+       // 但是getClass()方法并不适用于static method
+       // 我们可以将 getClass() 改写为
+       new Object(){}.getClass().getEnclosingClass()
+       #+END_EXAMPLE
+*** static inner class
+    前面的inner class有个共同的特点，那就是其构造方法必须绑定某个Outer class的对象。但很多时候我们并不想这么麻烦，或者没有办法提供Outer class(譬如调用外部工具类的static方法)，这时我们可以使用static inner class，它的特性有：
+    + 构造对象时不会关联Outer class的对象(意味着static inner class无法访问外部类的成员变量和局部变量)
+    + 同样拥有所有访问修饰符
+    + 可以正常使用static field和static method
+    + 在interface中定义的inner class自动成为public static
+
+    示例：
+    #+BEGIN_SRC java
+    class ArrayAlg{
+	// static inner class
+	public static class Pair{
+	    private double first ;
+	    private double second ;
+	    public Pair(double f, double s){
+		this.first = f ;
+		this.second = s ;
+	    }
+	    public double getFirst(){return this.first ;}
+
+	    public double getSecond(){return this.second ;}
+	}
+
+	// 通过Pair一次返回数组最大值和最小值
+	// 通过static inner class来narrow Pair的命名，避免不必要的名称冲突
+	public static Pair minmax(double[] values){
+	    // 设置合适的初始值
+	    // 传统做法是使用values[0]，但还需要做空指针判断、数组长度判断
+	    double min = Double.POSITIVE_INFINITY ;
+	    double max = Double.NEGATIVE_INFINITY ;
+	    for (double v : values){
+		if (min > v) min = v ;
+		if (max < v) max = v ;
+	    }
+	    return new Pair(min,max) ;
+	}
+    }
+    #+END_SRC
+
+    static inner class有个很好用的地方就是可以很简单的实现延迟装载、无并发风险的单例模式
+    #+BEGIN_SRC java
+    class HelloWorld {
+
+	private HelloWorld(){
+	    out.println("HelloWorld is initializing");
+	}
+
+	public static HelloWorld getInstance(){
+	    return HelloWorldSingleton.hl ;
+	}
+
+	private static class HelloWorldSingleton{
+	    static{
+		out.println("HelloWorldSingleton is initializing");
+	    }
+
+	    private static final HelloWorld hl = new HelloWorld() ;
+	}
+    }
+    #+END_SRC
+  

@@ -1,0 +1,199 @@
+* annotation in context
+    传统基于xml来声明bean，注入依赖的方式显得笨重又落伍，从2.5版本开始，spring开始支持annotation式配置，也越来越便利。
+** for bean
+| @Component  | v2.5 | type        | identify any bean   |
+| @Controller | v2.5 | type        | identify controller |
+| @Service    | v2.5 | type        | identify service    |
+| @Repository | v2.5 | type        | identify DAO        |
+|-------------+------+-------------+---------------------|
+| @Scope      | v2.5 | type/method |                     |
+*** @Component | @Controller | @Service | @Repository
+| value | v2.5 | "" |
+    这几个annotation的用法一致，声明spring的bean，唯一参数value对应bean id，如果不指定则使用class的首字母小写形式
+    #+BEGIN_SRC java
+      @Service("movieLister")
+      public class MovieListerImpl implements MovieLister
+    #+END_SRC
+
+    注解声明在spring容器初始化时默认不生效，需要在spring config xml中打开开关，并指定需要扫描的包（也会遍历其所有子包）
+    #+BEGIN_SRC xml
+      <context:component-scan base-package="com.ebb.study.action" />
+    #+END_SRC
+
+*** @Scope
+| value     | v2.5 | ""                      |                 |
+| scopeName | v4.2 | ""                      | alias for value |
+| proxyMode | v2.5 | ScopedProxyMode.DEFAULT |                 |
+
+    和@Component连用，标识bean的scope，如果不指定则默认sigleton
+
+** for DI
+    spring提供了以下annotation用于标识需要被自动注入的依赖(@Resource是j2ee规范定义，需要import javax.annotation.Resource)
+| @Autowired | v2.5 | field、constructor/method、parameter |
+| @Resource  | v2.5 | field、method                        |
+| @Qualifier | v2.5 | 和@Autowired搭配使用                 |
+| @Value     | v3.0 | field、method、parameter             |
+
+*** @Autowired
+    默认按类型装配，如果要指定bean name，可以和@Qualifier搭配
+    #+BEGIN_SRC java
+      @Autowired
+      private MovieLister movieLister;
+
+      @Autowired
+      @Qualifier("userDao")
+      private UserDao userDao;
+    #+END_SRC
+
+*** @Resource
+    默认按id装配，也可以使用"type"属性来按类型装配
+    #+BEGIN_SRC java
+      @Resource(name="movieLister")
+      private MovieLister movieLister;
+    #+END_SRC
+
+*** @Value
+    简化属性初始化赋值操作，有两种写法：
+    1. "#{...}" : 可以引用在当前及父context中声明的bean的属性，也可以指定常量
+       #+BEGIN_SRC java
+ 	 @Value("#{1}")  
+	 private int number; //获取数字 1  
+
+	 @Value("#{'Spring Expression Language'}") //获取字符串常量  
+	 private String str;  
+
+	 @Value("#{dataSource.url}") //获取bean的属性  
+	 private String jdbcUrl;
+       #+END_SRC
+
+    2. "${...}" : 可以引用在当前context中声明的properties属性(更常用)
+       #+BEGIN_SRC java
+         @Value("${init.password}")
+ 	 private String initPwd;
+       #+END_SRC
+       
+
+* annotation in tx
+    @Transactional( rollbackFor={Exception.class}) 事务管理
+
+    
+* annotation in mvc
+** for request mapping & parameter
+| @RequestMapping    | v2.5 | type、method | 请求映射                 |
+|--------------------+------+--------------+--------------------------|
+| @RequestParam      | v2.5 | parameter    | 自动获取请求参数值       |
+| @PathVariable      | v3.0 | parameter    | 自动获取uri template值   |
+| @RequestHeader     | v3.0 | parameter    | 自动获取header属性值     |
+| @ReuqestBody       | v3.0 | parameter    |                          |
+| @CookieValue       | v3.0 | parameter    | 自动获取header中cookie值 |
+| @RequestAttribute  | v4.3 | parameter    | 自动获取RequestAttr值    |
+| @SessionAttribute  | v4.3 | parameter    | 自动获取SessionAttr值    |
+|--------------------+------+--------------+--------------------------|
+| @ModuleAttribute   | v2.5 | method/param |                          |
+| @SessionAttributes | v2.5 | type         |                          |
+*** @RequestMapping
+| String           | name     | v2.5 | "" |                 |
+| String[ ]        | value    | v2.5 | {} |                 |
+| String[ ]        | path     | v4.2 | {} | alias for value |
+| RequestMethod[ ] | method   | v2.5 | {} |                 |
+| String[ ]        | params   | v2.5 | {} |                 |
+| String[ ]        | headers  | v2.5 | {} |                 |
+| String[ ]        | consumes | v2.5 | {} |                 |
+| Stirng[ ]        | produces | v2.5 | {} |                 |
+    spring从2.5开始，提供了@RequestMapping来支持对请求path和handler的映射，也很好的解决了1个handler处理多个请求path的问题。
+       #+BEGIN_SRC java
+         // normal uri
+	 @Controller
+	 @RequestMapping("/test")
+	 public class MyController {
+	     @RequestMapping("/show")
+	     public void showSth(){...}
+	 }
+
+	 // uri template
+	 @RequestMapping("/test/{variable1}")
+
+	 // wildcard
+	 @RequestMapping("*/wildcard")
+
+	 // 指定request method, GET|POST|PUT|DELETE...
+	 @RequestMapping(value="...", method=RequestMethod.GET)
+       #+END_SRC
+*** @RequestParam       
+| value    | v2.5 | ""   |                 |
+| name     | v4.2 | ""   | alias for value |
+| required | v2.5 | true |                 |
+    用法很简单，标识方法参数，让spring自动从请求参数中匹配key。
+    GET请求，查找query string
+    POST请求，查找request body data
+    #+BEGIN_SRC java
+      @RequestMapping("...")
+      public void showSth(@Requestparam String key){...}
+      
+      @RequestMapping("...")
+      public void showSth(@RequestParam("key") String key){...}
+      
+      @RequestMapping("...")
+      public void showSth(@RequestParam(value="key",required=false) String key){
+          ...
+      }
+    #+END_SRC
+*** @PathVariable    
+| value    | v3.0   | ""   |                 |
+| name     | v4.3.3 | ""   | alias for value |
+| required | v4.3.3 | true |                 |
+    用法也很简单，标识方法参数，让spring自动从uri template中匹配key
+    #+BEGIN_SRC java
+      @RequestMapping("/{id}")
+      public void showSth(@PathVariable("id") String id){...}
+    #+END_SRC
+
+** for response
+*** @ResponseBody
+  
+
+@RequestMapping("/menu")  请求映射
+
+
+@ResponseBody
+@Scope("prototype")   设定bean的作用域
+
+
+Spring 3组件(maven groupid=org.springframework)
+
+Core	spring-core		commons-logging
+			spring-asm
+Beans	spring-beans		spring-core
+Context	spring-context		spring-beans
+			spring-aop
+			spring-expression
+Context.Support	spring-context-support		spring-context
+Expression Language	spring-expression		spring-core
+
+AOP	spring-aop		spring-beans
+			aopalliance
+Aspects
+ASM	spring-asm		N/A
+
+Instrument
+instrument.tomcat
+
+
+JDBC	spring-jdbc		spring-context
+			spring-tx
+ORM	spring-orm		srping-jdbc
+OXM	spring-oxm		commons-lang
+			spring-context
+Transactions	spring-tx		spring-context
+JMS	spring-jms		spring-context
+			spring-tx
+
+Web	spring-web		spring-context
+Servlet	spring-webmvc		spring-context
+			spring-context-support
+			spring-web
+Portlet
+Struts
+
+Test	spring-test
+

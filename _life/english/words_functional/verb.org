@@ -1,0 +1,14 @@
+* most common functional verbs
+** auxiliary verbs
+  | be / do  |
+  | have     |
+** modal verbs
+  | can   | could  |
+  | may   | might  |
+  | must  |        |
+  | shall | should |
+  | will  | would  |
+
+  + ought to
+  + used to
+  + be going to

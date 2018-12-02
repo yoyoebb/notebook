@@ -1,0 +1,41 @@
+1. Everything is a file
+在Linux底层，所有东西都被视为文件，Keyboard是一种仅用于输入的文件，Screen是一种仅用于输出的文件。
+
+2. Linux is an extensionless System
+在Window系统，你必须通过扩展名来知道文件类型以及如果打开它，但Linux并不关心扩展名，在处理文件时，扩展名直接被丢弃，它会基于文件的内容来决定其类型。我们可以通过file命令来查看文件类型。
+e.g.
+[ctcs@VM_34_14_centos ~]$ file hs_err_pid26228.log
+hs_err_pid26228.log: ASCII text, with very long lines
+
+3. Linux对大小写敏感
+4. 如果文件/目录名中有空格
+Linux完全允许文件、目录名中包含空格，但是与处理名称中不包含空格的文件/目录不同的是，为了不让命令混淆，我们得：
+a:  use either single or double quotes
+cd 'Holiday Photos'
+b: use Escape Characters(backslash)， 如果我们使用Tab自动补全，那么它会自动帮我们对有空格的文件名转义
+cd Holiday\ Photos
+
+5. 隐藏文件和目录
+以'.'开头的文件，会被Linux视为隐藏文件。（当前目录、上级目录、/home/用户/.bashrc、/home/用户/.profile 这些都是常见的隐藏文件/目录。）我们可以通过 ls命令加上-a参数 来查看隐藏文件/目录
+
+/	Root Directory
+~	Home Directory
+.	Current Directory
+..	Parent Directory
+
+/etc	Stores config files for the system
+/var/log	Stores log files for various system programs.
+/var/tmp/
+/bin	The location of several commonly used programs
+/usr/bin	Another location for programs on the system.
+
+/dev/zero
+/etc/redhat-release
+/etc/profile
+/etc/passwd         保存着所有的用户信息及登录密码的文件
+
+文件时间戳
+linux文件有3个时间戳
+Access 最后一次读取的时间（访问）
+Modify 最后一次修改数据的时间（修改），同时会更新Access和Change
+Change 最后一次修改元数据的时间（改变），如mv、chown、chgrp...

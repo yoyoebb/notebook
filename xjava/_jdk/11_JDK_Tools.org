@@ -1,0 +1,15 @@
+#+SETUPFILE: ~/.emacs.d/org-templates/level-2.org
+#+TITLE: 11. JDK Tools
+
+* Java环境设置
+** class path
+当我们编译或执行java程序时，Java是通过classpath去寻址所用到的java文件/class文件，如果找不到，则会报ClassNotFound Error
+ + JRE自动寻址的class path: ~jre/lib~, ~jre/lib/ext~
+ + javac 编译时，总是会自动寻址当前目录，但java 运行时，只有当没有设置classpath参数时，才会默认寻址当前目录，如果设置了，必须将'.'显式添加进classpath
+ + 有两种方式设置class path
+   + 在使用java/javac时，指定cp参数。 ~java -cp /home/user/classdir:.:/home/user/archives/archive.jar MyProg~ (*nux)
+   + 在当前shell周期内设置CLASSPATH环境变量。 ~export CLASSPATH=/home/user/classdir:.:/home/user/archives/archive.jar~ (BASH)
+   *最好不要永久化设置CLASSPATH，容易造成不必要的麻烦，尤其是生产环境。*
+* JDK Tools
+** jar
+JAR使用的是ZIP格式来压缩文件和目录

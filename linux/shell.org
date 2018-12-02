@@ -1,0 +1,12 @@
+* shell
+
+
+* environment variable (环境变量)
+  linux中存在很多的环境变量，用于协同工作，环境变量命名通常采用全大写字母。
+
+  env
+    列举当前用户的所有环境变量
+  echo
+    显示指定环境变量的值，如： echo $PATH
+  export
+

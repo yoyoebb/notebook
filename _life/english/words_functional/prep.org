@@ -1,0 +1,118 @@
+* list of common preposition
+| about         |  Y |
+| above         |  Y |
+| according to  |    |
+| across        |  Y |
+| after         |  Y |
+| against       |    |
+| along         |  Y |
+| alongside     |  Y |
+| among         |    |
+| around        |  Y |
+| as            |  Y |
+| at            |    |
+| because of    |    |
+| before        |  Y |
+| behind        |  Y |
+| below         |  Y |
+| beneath       |  Y |
+| beside        |    |
+| between       |  Y |
+| beyond        |  Y |
+| but           |  Y |
+| by            |  Y |
+| concerning    |    |
+| despite       |    |
+| down          |  Y |
+| during        |    |
+| except        |    |
+| for           |    |
+| from          |    |
+| in            |  Y |
+| including     |    |
+| inside        |  Y |
+| into          |    |
+| like          |  Y |
+| near          |  Y |
+| of            |    |
+| off           |  Y |
+| on            |  Y |
+| onto          |    |
+| opposite      |  Y |
+| out           |  Y |
+| outside       |  Y |
+| over          |  Y |
+| past          |  Y |
+| per           |    |
+| plus          |    |
+| round         |  Y |
+| since         |  Y |
+| than          |    |
+| through       |  Y |
+| throughout    |  Y |
+| till / until  |    |
+| to            |    |
+| toward / towards   |  |
+| under         |  Y |
+| underneath    |  Y |
+| unlike        |    |
+| up            |  Y |
+| upon          |    |
+| via           |    |
+| with          |    |
+| within        |  Y |
+| without       |    |
+
+* common usage
+** in、on、at (time & place)
+in : general, Bigger
++ time
+  |centuries | in the 1900's   |
+  |decades   | in the 90's     |
+  |years     | in 1990, 2000..., in 3 years |
+  |months    | in March, June...|
+  |weeks     | in 5 weeks       |
+  |seasons   | in Spring,Winter...|
+  |periods of time | in the future, past...|
+  |holidays        | in the Easter Holiday |
+  |parts of the day| in the morning        |
+
++ place
+  |countries  | in France... |
+  |cities     | in Paris...  |
+  |neighborhood|  in Manhattan |
+  |enclosed space|  in a car, room...|
+
+on : more specific, smaller
++ time
+  |time       | on the weekend |
+  |days       | on Monday,Friday...|
+  |dates      | on April 3rd   |
+  |specific days    |  on my birthday    |
+  |day + part of day|  on Sunday morning |
+  |Holidays with day|  on Easter Day     |
+
++ place
+  | streets   | on Columbus Street, the road... |
+  | avenues   | on Seventh Avenue  |
+  | surfaces  | on the floor...    |
+  | means of transport | on a bus,boat...         |
+  | communications     | on the radio, screen, TV, internet...   |
+
+at : very specific, smallest
++ time
+  | hours            |  at 8 a.m/p.m... |
+  | parts of the Day |  at Midnight, noon... |
+  | time             |  at the moment   |
+  | holidays without day | at Easter    |
+
++ place
+  | address            | at 456 State Street   |
+  | specific locations | at the station, office, top...        |
+
+in a line, queue, row, race...
+in the garden, sky, prison, in Times Square...
+in bed, in a room, in a lift...
+in the final stages
+at the top, front, entrance, exit ...
+at someone' house, at school

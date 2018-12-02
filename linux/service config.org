@@ -1,0 +1,4 @@
+* network config
+** display network info
+   + ifconfig
+     显示服务器中网卡信息

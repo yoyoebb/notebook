@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ebb.t_orm.ibatis.mapper.DMLMapper">
+    <!-- 插入模式1，简单插入
+         *自增长列可以不指定值
+    -->
+    <insert id="insert">
+        insert into Test(name) values(#{name})
+    </insert>
+
+    <!-- 插入模式2，插入时返回id -->
+    <insert id="insertReturnId">
+        <selectKey keyProperty="id" resultType="int" order="BEFORE">
+            select nextval('test_id_seq')
+        </selectKey>
+        insert into Test(id,name) values(#{id},#{name})
+    </insert>
+
+    <!-- 更新模式 -->
+    <update id="update">
+        update Test set name = #{name}
+        <include refid="byCondition"/>
+    </update>
+
+    <!-- 删除模式 -->
+    <update id="delete">
+        delete from Test
+        <include refid="byCondition"/>
+    </update>
+
+
+    <sql id="byCondition">
+        <!-- <where>
+             当返回条件时才会插入where关键字，同时会自动trim 第一个 'and' | 'or'
+        -->
+        <where>
+            <if test="id != null">
+                and id=#{id}
+            </if>
+        </where>
+    </sql>
+</mapper>

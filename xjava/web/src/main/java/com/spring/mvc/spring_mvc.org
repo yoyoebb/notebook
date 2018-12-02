@@ -1,0 +1,63 @@
+#+SETUPFILE: ~/.emacs.d/org-templates/level-2.org
+#+TITLE: 13 - Spring MVC
+
+* Web MVC framework
+** Introduction to Spring MVC framework
+  Spring MVC是一套围绕 ~DispatcherServlet~ 设计而成的MVC框架，它的设计理念是"Open for extension, closed for modification"，处理Http请求和相应的流程如下图所示：
+
+  [[../../images/Java/spring_mvc.png]]
+  
+  框架中的主要组件包括：
+  + controller
+  + validator
+  + command object
+  + form object
+  + model object
+  + DispatcherServlet
+  + handler mapping
+  + view resolver
+  
+** ContextLoaderListener
+pacakge : org.springframework.web.context.ContextLoaderListener
+spring mvc 框架负责初始化root ApplicationContext的servlet容器监听器
+默认查找的配置文件path: /WEB-INF/applicationContext.xml
+
+通过web.xml中的<context-parm>可以指定配置文件路径
+#+BEGIN_SRC xml
+  <context-param>
+    <param-name>contextConfigLocation</param-name>
+    <param-value>classpath:applicationContext.xml</param-value>
+    <!-- 有几种配置风格
+         1. 放在classpath下:
+            classpath:applicationContext.xml
+	    classpath*:applicationContext.xml
+	 2. 放在WEB-INF目录下
+	    /WEB-INF/classes/config/applicationContext.xml
+         路径、文件支持通配
+    -->
+  </context-param>
+#+END_SRC
+
+
+** DispatcherServlet
+  DispatcherServlet是Spring MVC的请求转发器，其作用是接受指定模式的请求，并将请求按照 request mapping 规则，转交给指定的controller进行处理。它是一个标准的Servlet(继承自HttpServlet)，因此我们需要在web.xml中进行适当地配置。
+  #+BEGIN_SRC xml
+    <web-app>
+      <servlet>
+	<servlet-name>example</servlet-name>
+	<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+	<load-on-startup>1</load-on-startup>
+      </servlet>
+
+      <servlet-mapping>
+	<servlet-name>example</servlet-name>
+	<url-pattern>*.htm</url-pattern>
+      </servlet-mapping>
+      <servlet-mapping>
+	<servlet-name>example</servlet-name>
+	<url-pattern>*.json</url-pattern>
+      </servlet-mapping>
+    </web-app>
+  #+END_SRC
+
+  它的继承树如下：

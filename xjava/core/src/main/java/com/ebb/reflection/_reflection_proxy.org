@@ -1,0 +1,48 @@
+* Reflection 
+   所有的class，在被ClassLoader加载后，都以 java.lang.Class<E> 类的形式保存在JVM方法区
+
+   这些Class类和 java.lang.reflect 包里的部分接口和类，构成了JAVA的MetaData，包括：
+   + java.lang
+     - Class<E>
+   + java.lang.reflect
+     + AccessibleObject
+     + Executable
+     + Method
+     + Constructor<T>
+     + Field
+     + Parameter
+     + Modifier
+     + Array
+
+* Class Loader
+** java.lang.ClassLoader
+  <abstract> ClassLoader是JVM的类装载器，JVM通过ClassLoader来查找和装载Class。
+
+  在JDK中存在三个类装载器：
+  + Bootstrap ClassLoader : 加载<JAVA_HOME>\lib目录下的，或-Xbootclasspath参数指定路径下的类
+  + Extension ClassLoader : 加载<JAVA_HOME>\lib\ext目录下的，或被java.ext.dirs系统变量所指定的路径下的类
+  + Application Classloader : 加载classpath路径下的类
+
+** 加载原则：父类委托
+   当某个类需要装载时：
+   1. AppClassLoader判断需加载的类是否已经被自己加载，如果是，则返回；否则委托ExtClassLoader去装载
+   2. ExtClassLoader判断需加载的类是否已经被自己加载，如果是，则返回；否则委托Bootstrap去装载
+   3. Bootstrap判断需加载的类是否已经被自己加载，如果是，则返回；否则尝试在jre/lib下寻找需加载的类，如果找到则加载;否则，返回ExtClassLoader
+   4. ExtClassLoader尝试在jre/lib/ext下寻找需加载的类，如果找到则加载;否则，返回AppClassLoader
+   5. AppClassLoader尝试在classpath下寻找需加载的类，如果找到则加载；否则，抛出ClassNotFoundException
+* What's proxy?
+  代理是一种设计模式，提供了另一种对目标对象的访问方式：即通过代理对象来访问目标对象。相比直接调用目标对象的访问方式，这样做的好处是，可以在不改变目标对象实现的基础上，去扩充目标对象的功能。
+
+  按照代理对象生成的阶段，代理模式可以分为：
+  + static proxy :: 在编译时就生成了代理对象的class文件。
+  + dynamic proxy :: 在运行时动态生成代理对象的class并进行加载。
+
+  dynamic proxy是AOP编程思想的核心技术之一。目前主要的两种实现方式是：
+  1. JDK实现(利用接口)
+  2. Cglib实现(利用继承)
+
+* 总结：
+1. 代理对象和目标对象需要通过 接口 或 继承 来形成某种共性(目的是对使用者透明)
+2. 代理对象和目标对象形成聚合关系(has-a)
+3. 利用面向接口编程和动态代理，我们可以在不改变原有代码的同时对其实现功能增强
+

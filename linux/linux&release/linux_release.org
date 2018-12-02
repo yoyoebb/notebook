@@ -1,0 +1,51 @@
+* Common Linux Release
+  linux release version是基于linux核心进行集成、扩展而形成的发行版本，常见的有：
+  1. RedHat系列
+     + RedHat Enterprise Linux (RHEL)
+     + Community Enterprise Operating System (CentOS)
+       通过把RHEL系统重新编译并发布给用户免费使用的Linux系统，具有广泛的使用人群。CentOS当前已被红帽公司“收编”
+     + Fedora
+       由红帽公司发布的桌面版系统套件（目前已经不限于桌面版）,被称为RHEL的试验田
+
+  2. openSUSE
+     源自德国的一款著名的Linux系统，在全球范围内有着不错的声誉及市场占有率。
+
+  3. Debian系列
+     + Debian
+     稳定性、安全性强，提供了免费的基础支持，可以良好地支持各种硬件架构，以及提供近十万种不同的开源软件，在国外拥有很高的认可度和使用率。
+
+     + Ubuntu
+     是一款派生自Debian的操作系统，对新款硬件具有极强的兼容能力。Ubuntu与Fedora都是极其出色的Linux桌面系统，而且Ubuntu也可用于服务器领域。
+
+  4. Arch系列
+     + Arch
+
+     + Manjaro
+
+* RedHat
+  红帽公司成立于1993年，是全球首家收入超10亿美元的开源公司，总部位于美国，分支机构遍布全球。红帽公司作为全球领先的开源和Linux系统提供商，其产品已被业界广泛认可并使用，尤其是RHEL系统在业内拥有超高的Linux系统市场占有率。红帽公司除了提供操作系统之外，还提供了虚拟化、中间件、应用程序、管理和面向服务架构的解决方案。
+
+  2014年6月10日，红帽公司发布新版红帽企业版系统（RHEL 7）
+
+** RedHat 认证
+  + Red Hat Certified System Administrator (RHCSA)
+    初级认证，主要考察：
+    + 管理文件、目录、文档以及命令行环境；
+    + 使用分区、LVM逻辑卷管理本地存储；
+    + 安装、更新、维护、配置系统与核心服务；
+    + 熟练创建、修改、删除用户与用户组，并使用LDAP进行集中目录身份认证；
+    + 熟练配置防火墙以及SELinux来保障系统安全。
+  + Red Hat Certified Engineer (RHCE)
+    中级认证，主要考察：
+    + 熟练配置防火墙规则链与SElinux安全上下文；
+    + 配置iSCSI（互联网小型计算机系统接口）服务；
+    + 编写Shell脚本来批量创建用户、自动完成系统的维护任务；
+    + 配置HTTP/HTTPS网络服务；
+    + 配置FTP服务；
+    + 配置NFS服务；
+    + 配置SMB服务；
+    + 配置SMTP服务；
+    + 配置SSH服务；
+    + 配置NTP服务。
+  + Red Hat Certified Architect (RHCA)
+    属于Linux系统的最高级别认证，是公认的Linux操作系统顶级认证。考生需要在获得RHCSA与RHCE认证后再完成5门课程的考试才能获得RHCA认证，因此难度最大，备考时间最长，费用也最高（考试费约在1.8万元～2.1万元人民币）。该认证考察的是考生对红帽卫星服务、红帽系统集群、红帽虚拟化、系统性能调优以及红帽云系统的安装搭建与维护能力。

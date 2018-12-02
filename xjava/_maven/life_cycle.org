@@ -1,0 +1,50 @@
+在Maven2中有了明确的生命周期概念，而且都提供与之对应的命令，使得项目构建更加清晰明了。主要的生命周期阶段：
+mvn clean	清理项目生产的临时文件,一般是模块下的target目录
+mvn validate	验证工程是否正确，所有需要的资源是否可用。
+mvn compile	编译项目的源代码
+mvn test-compile	编译项目测试代码
+mvn test	使用已编译的测试代码，测试已编译的源代码
+mvn package	项目打包工具,会在模块下的target目录生成jar或war等文件
+mvn verify	运行任何检查，验证包是否有效且达到质量标准
+mvn install	把包安装在本地的repository中，可以被其他工程作为依赖来使用
+mvn deploy	在整合或者发布环境下执行，将最终版本的包拷贝到远程的repository，使得其他的开发者或者工程可以共享。需要设置POM中的distributionManagement
+
+
+有时候，编译时要指定一些其他的javac参数,要在POM中设置complie-plugin
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <version>3.7.0</version>
+    <configuration>
+        <compilerArgs>
+            <arg>-verbose</arg>
+            <arg>-Xlint:all,-options,-path</arg>
+        </compilerArgs>
+    </configuration>
+</plugin>
+
+maven compile插件默认的source 和 target 都是1.5版本，针对高版本的JDK，要在POM中修改其默认配置，两个方法:
+a. 在properties设置中指定对应的参数
+<properties>
+	<maven.compiler.source>1.7</maven.compiler.source>
+	<maven.compiler.target>1.7</maven.compiler.target>
+</properties>
+
+b.  直接在complie-plugin中设置
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <version>3.7.0</version>
+    <configuration>
+        <source>1.8</source>
+        <target>1.8</target>
+    </configuration>
+</plugin>
+
+
+升级maven工程及子模块的版本号
+解决办法：先把parent project更新到指定version，然后再更新子模块，让其与父模块的版本号保持一致：
+1. mvn versions:set -DnewVersion=1.0.1-SNAPSHOT
+2. mvn -N versions:update-child-modules
+3. 执行后maven会将pom.xml保留一个备份：pom.xm.versionsBackup
+4. 确认升级版本无问题后，执行mvn versions:commit 确认升级，去掉备份的pom.xml.versionsBackup

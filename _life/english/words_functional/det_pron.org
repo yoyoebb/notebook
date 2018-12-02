@@ -1,0 +1,205 @@
+* det & normal pron
+** art
+  a、an、the
+
+** number
++ number : one, two, three...
++ order  : first, second, third...
+
+** personal pron and det
+ |  I   |  me  |  my  |   myself |  mine |
+ | you  | you  | your | yourself | yours |
+ | he   | him  | his  | himself  | his   |
+ | she  | her  | her  | herself  | hers  |
+
+ | we   | us   | our  | ourselves | ours  |
+ | you  | you  | your | yourself  | yours |
+ | they | them | their| themselves| theirs |
+
+ | it  | its   | itself  |
+ | one | one's | oneself |
+
+ | anybody   |   anyone   |   anything  |
+ | somebody  |   someone  |  something  |
+ | everybody |  everyone  |  everything |
+ | nobody    |   none     |   nothing   |
+
+** common det & pron
++ both
+  + this / that
+      this is a book;
+      this book;
+  + all
+      [pre det] all the people I met
+      [det] he slept all day
+      [pron] we all have different needs
+  + another
+      I didn't say another word
+      moving from one place to another
+  + any
+      I don't have any choice
+      you don't know any of my friends
+  + both
+      [pre det] both his parents indulged him
+      [det] she held on with both hands
+      [pron] a picture of both of us together
+  + each
+      each battery is in a separate compartment
+      Derek had money from each of his five uncles
+  + either / neither
+      there were no children of either marriage
+      neither side of the brain is dominant over the other
+      their mortgage will be repaid if either of them dies
+      neither of us believes it
+  + enough
+      there was just enough room for two cars
+      getting enough of the right things to eat
+      [post adj] there will be time enough to tell you when we meet
+  + few / little / a few / a little
+      may I ask a few questions?
+      I will recount a few of the stories told me
+      [adj] sewing was one of her few pleasures
+  + many / much
+      many people agreed with her
+      I did so much shopping
+      the solution to many of our problems
+      he does not eat much
+      [adj] one of my many errors
+  + less / least / more / most
+      they've had the most success
+      I poured myself more coffee
+      tell me more
+      I spent most of the winter on the coast
+  + half
+      [pre det] half an hour
+      [pron] half of the lectures are delivered by him
+      [adj] the last half century
+  + some
+      I made some money running errands
+      here are some of our suggestions
+  + several
+      the author of several books
+      several of his friends attended
+  + such
+      [pre det] I longed to find a kindred spirit, and in him I thought I had found such a person
+      [det] there is no such thing as a free lunch
+      [pron] such is the elegance of his typeface that it is still a favourite of designers
+
++ only det
+  + every
+      [det] the hotel assures every guest of personal attention
+  + no
+      [det] no two plants are alike
+
++ only pron
+  + a lot / lots / a bit / plenty
+      [pron] there are a lot of actors in the cast
+  + one another / each other
+      [pron] the children used to tease one another
+  + other / the other
+      [pron] the other side of the street
+      [pron] one other word of advice
+  + 's own
+      [pron] the Church would look after its own
+  + the same
+      [pron] I'll resign and encourage everyone else to do the same (thing).
+
+
+* interrogative, relative pron & adv
+** pron
++ that
+  + relative pron
+    the woman that owns the place
+
++ what
+  + interrogative pron / det
+    what is your name?
+    what time is it?
+  + relative pron / det
+    what we need is a commitment
+    he had been robbed of what little money he had
+  + det
+    what a fool she was
+
++ whatever
+  + relative pron / det
+    do whatever you like
+    take whatever action is needed
+  + interrogative pron
+    whatever is the matter?
+
++ who / whom
+  + interrogative pron
+    who is that woman
+    whom did he marry?
+  + relative pron
+    Joan Fontaine plays the mouse who married the playboy
+    I am now with a lady of whom I am fond, but not in love, and I find it harder to respond to her.
+
++ whoever
+  + relative pron
+    whoever wins should be guaranteed an Olympic place
+  + interrogative pron
+    whoever would want to make up something like that?
+
++ whose
+  + interrogative det
+    whose round is it?
+  + relative det / pron
+    he's a man whose opinion I respect
+    a Mini was parked at the kerb and Juliet wondered whose it was
+
++ which
+  + interrogative det / pron
+    which way is the wind blowing?
+    which are the best varieties of grapes for long keeping?
+  + relative det / pron
+    your claim ought to succeed, in which case the damages will be substantial
+    a conference in Vienna which ended on Friday
+    it was a crisis for which he was totally unprepared
+
++ whichever
+  + relative det / pron
+    choose whichever brand you prefer
+    whichever they choose, we must accept it
+
+** adverb
++ how
+  + interrogative adv
+    how does it work?
+  + relative adverb
+    she told us how she had lived out of a suitcase for a week
+    he showed me how to adjust the focus
+
++ when
+  + interrogative adv
+    when did you last see him?
+  + relative adverb
+    Saturday is the day when I get my hair done
+
++ whenever
+  + interrogative adv
+    whenever shall we get there?
+
++ where
+  + interrogative adv
+    where do you live?
+  + relative adverb
+    I first saw him in Paris, where I lived in the early sixties
+
++ wherever
+  + relative adverb
+    meet me wherever you like
+  + interrogative adv
+    wherever can he have gone to?
+
++ while
+  + relative adverb
+    the period while the animal remains alive
+
++ why
+  + interrogative adv
+    why did he do it?
+  + relative adverb
+    each has faced similar hardships, and perhaps that is why they are friends
+    the reason why flu jabs need repeating every year is that the virus changes

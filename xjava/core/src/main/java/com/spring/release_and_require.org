@@ -1,0 +1,84 @@
+﻿* Spring FrameWork Summury
+** release history
+    + Spring 1.X   (JDK 1.4)
+    | 1.0.x |  1.0 M1 | 2003.8.30 | >=J2SE 1.3 & J2EE 1.3(Servlet 2.3, JSP 1.2, JTA 1.0, EJB 2.0) |
+    |       |   1.0.2 |  2004.3.4 |                                                               |
+    | 1.1.x | 1.1 RC1 | 2004.7.28 | >=J2SE 1.3 & J2EE 1.3(Servlet 2.3, JSP 1.2, JTA 1.0, EJB 2.0) |
+    |       |   1.1.5 | 2005.2.28 |                                                               |
+    | 1.2.x | 1.2 RC1 | 2005.3.28 | >=J2SE 1.3 & J2EE 1.3(Servlet 2.3, JSP 1.2, JTA 1.0, EJB 2.0) |
+    |       |   1.2.9 |  2007.3.7 |                                                               |
+
+    + Spring 2.0.X   (JDK 1.5,AspectJ)
+    | 2.0.x | 2.0 final | 2006.10.3 | >=J2SE 1.3 & J2EE 1.3(Servlet 2.3, JSP 1.2, JTA 1.0, EJB 2.0) |
+    |       |     2.0.8 |  2008.1.7 |                                                               |
+
+    + Spring 2.5.X   (JDK 1.6,AspectJ)
+    | 2.5.x | 2.5 final | 2007.11.19 | >=J2SE 1.4.2 & J2EE 1.3(Servlet 2.3, JSP 1.2, JTA 1.0, EJB 2.0) |
+    |       |     2.5.6 | 2008.10.31 |                                                                 |
+
+    + Spring 3.X
+    | 3.0.x |  3.0.0 | 2009.12.16 |
+    |       |  3.0.7 | 2011.12.22 |
+    | 3.1.x |  3.1.0 | 2011.12.12 |
+    |       |  3.1.4 |  2013.1.23 |
+    | 3.2.x |  3.2.0 | 2012.12.13 |
+    |       | 3.2.18 | 2016.12.21 |
+
+    + Spring 4.X  (Spring Boot 1.0)
+    | 4.0.x | 4.0.0 | 2013.12.12 |
+    |       | 4.0.9 | 2014.12.30 |
+    | 4.1.x | 4.1.0 |   2014.9.4 |
+    |       | 4.1.9 | 2015.12.17 |
+    | 4.2.x | 4.2.0 |  2015.7.31 |
+    |       | 4.2.9 | 2016.12.21 |
+    | 4.3.x | 4.3.0 |  2016.6.10 |
+    |       | 4.3.9 |   2017.6.7 |
+
+** beans xml schema
+    + 1.X (DTD)
+      #+BEGIN_SRC xml
+        <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+      #+END_SRC
+    
+    + 2.X及之后 (推荐使用XSD，支持校验和命名空间)
+      #+BEGIN_SRC xml
+	<beans xmlns="http://www.springframework.org/schema/beans"
+	       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 	   
+	       xsi:schemaLocation="http://www.springframework.org/schema/beans 
+				   http://www.springframework.org/schema/beans/spring-beans.xsd">
+	</beans>
+      #+END_SRC
+
+      namespace支持，定义在每个组件jar的 '/META-INF/'下的spring.handlers、spring.schemas文件中
+      | core    | beans   | org/springframework/beans/factory/xml/spring-beans-x.xsd | 2.0 |
+      |         | tool    | org/springframework/beans/factory/xml/spring-tool-x.xsd  | 2.0 |
+      |         | util    | org/springframework/beans/factory/xml/spring-util-x.xsd  | 2.0 |
+      |         | p       |                                                          | 2.0 |
+      | context | context | org/springframework/context/config/spring-context-x.xsd  | 2.5 |
+      |         | jee     | org/springframework/ejb/config/spring-jee-x.xsd          | 2.0 |
+      |         | lang    | org/springframework/scripting/config/spring-lang-x.xsd   | 2.0 |
+      |         | task    | org/springframework/scheduling/config/spring-task-x.xsd  | 3.0 |
+      |         | cache   | org/springframework/cache/config/spring-cache-x.xsd      | 3.1 |
+      | aop     | aop     | org/springframework/aop/config/spring-aop-x.xsd          | 2.0 |
+      | jdbc    | jdbc    | org/springframework/jdbc/config/spring-jdbc-x.xsd        | 3.0 |
+      |         |         |                                                          |     |
+
+** component (default 2.5)
+    | ASM             | spring-asm             | N/A                                         | 3.0 |
+    | Core            | spring-core            | commons-logging, spring-asm                 |     |
+    | Beans           | spring-beans           | spring-core                                 |     |
+    | Context         | spring-context         | spring-beans, spring-aop, spring-expression |     |
+    | Context.Support | spring-context-support | spring-context                              |     |
+    | EL              | spring-expression      | spring-core                                 | 3.0 |
+    | AOP             | spring-aop             | spring-beans, aopalliance                   |     |
+    |-----------------+------------------------+---------------------------------------------+-----|
+    | Transactions    | spring-tx              | spring-context                              |     |
+    | JDBC            | spring-jdbc            | spring-context, spring-tx                   |     |
+    | ORM             | spring-orm             | spring-jdbc                                 |     |
+    | OXM             | spring-oxm             | spring-context, commons-lang                | 3.0 |
+    | JMS             | spring-jms             | spring-context, spring-tx                   |     |
+    |-----------------+------------------------+---------------------------------------------+-----|
+    | Web             | spring-web             | spring-context                              |     |
+    | Servlet         | spring-webmvc          | spring-context-support, spring-web          |     |
+    |-----------------+------------------------+---------------------------------------------+-----|
+    | Test            | spring-test            |                                             |     |

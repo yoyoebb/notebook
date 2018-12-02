@@ -1,0 +1,142 @@
+以下知识都基于RHEL 7。 linux lab环境
+root   : Ebb_toshiba
+drake  : lyy_1982
+
+* RHEL 软件安装
+** Red-Hat Package Manager(RPM)
+  红帽软件包管理器，将软件打包为rpm格式，简化安装。
+** YUM 软件仓库
+  通过YUM安装rpm软件，会根据目标软件，分析出所需软件包及其相关的依赖关系,然后自动从服务器下载软件包并安装到系统。
+
+* RHEL 7 新特性
+** Systemd初始化进程
+  Linux操作系统的开机过程是这样的，即从BIOS开始，然后进入Boot Loader，再加载系统内核，然后内核进行初始化，最后启动初始化进程。初始化进程作为Linux系统的第一个进程，它需要完成Linux系统中相关的初始化工作，为用户提供合适的工作环境。
+
+  RHEL 7替换掉熟悉的初始化进程服务System V init，正式采用全新的systemd初始化进程服务。systemd采用了并发启动机制，开机速度得到了不小的提升。 新机制把初始化工作，比如挂载文件系统和交换分区、启动各类进程服务等，都看作是一个个的单元（Unit），用目标（target）代替了System V init中运行级别的概念。
+
+** 系统服务管理
+  RHEL 7中，使用了systemctl命令来管理服务。
+
+
+
+系统管理
+linux的root用户拥有至高无上的权利，但很多时候我们并不想直接使用root，而是想将部分命令赋予普通用户调用，如安装特定程序，这个时候可以通过sudo来进行控制。
+	1. root用户通过visudo命令，编辑/etc/sudoers (不要通过vi直接编辑，因为visudo会校验你输入的内容是否符合规定格式)
+	2. 用户执行命令前，加上sudo
+
+
+用户、组
+创建用户
+useradd [option] loginuseradd -D
+常用options：
+-c	为用户添加一段注释
+-d	为用户指定home路径，如果不指定，则默认采用/etc/default/useradd中的HOME属性值 + '/' + login
+	如果/etc/login.defs中CREATE_HOME属性为yes，则会自动创建HOME目录
+-g	为用户指定所属组，如果不指定，默认创建和用户同名的组
+-G	指定用户所属的附加组(多个组以 , 隔开)
+-s	指定用户的shell，如果不指定，则采用/etc/default/useradd中的SHELL属性值
+-m	为用户创建如果/etc/login.defs中CREATE_HOME属性为no，则不会自动创建HOME目录。
+
+password
+
+
+网络设置
+先弄清楚以下概念：
+IP
+Netmask
+gateway
+Hostname
+DomainName
+DNS
+
+默认情况下，只有root用户才可以管理网络配置
+	1. 使用以下命令检测网卡   lspci | grep Ethernet
+	2. 使用ifconfig
+
+
+日常操作
+用户&组
+命令的option通常会有一个长版本(--)和一个短版本(-)，如:
+ls -a                              #便于使用
+ls --all                          #便于理解
+Tips:
+	1. 按1次Tab可以自动补全命令，按两次Tab可以列举所有可能项，节约时间延长寿命必备
+	2. Ctrl + C可以从很多命令中退出。
+	3. 通配符：
+	4. 多个参数：nl -s '. ' -w 10 mysampledata.txt
+
+
+通配符
+Linux命令支持以下通配符：它可以在任意指定path的地方使用
+*代表0或多个字符
+?代表一个字符
+[]用来描述一个范围
+e.g. ls [sv]*         result: secondfile   video.mpeg
+     ls *.???         result: barry.txt    blah.txt    example.png    frog.png
+     ls *[0-9]*       result: 1  f2   3f  f4f
+
+
+权限
+基于文件/目录与用户的关系，Linux将用户分为了三大类：
+owner	文件或目录所属的用户
+group	文件或目录所属的组
+other	既不是owner也不在所属group的其他用户
+
+同时Linux将文件/目录的操作权限分成了三类：
+r	查看文件内容
+	显示目录内容(ls)
+w	修改文件内容
+	往目录中写入内容(create files and directories)
+x	执行程序或脚本进入目录(cd)
+
+我们可以通过chmod命令来调整文件/目录的权限。
+chmod [permissions] [path]
+修改文件/目录权限(只有root用户和owner可以修改权限)
+permissions由以下形式组成：
+	• Who are we changing the permission for? [ugoa] - user (or owner), group, others, all
+	• Are we granting or revoking the permission?  - indicated with either a plus ( + ) or minus ( - )
+	• Which permission are we setting? - read ( r ), write ( w ) or execute ( x )
+e.g.
+   chmod g+wx frog.png
+   chmod go-x frog.png
+它还有另外一种8进制表示法，通过三位0-7的数字，来分别代表owner、group、others对应的三组权限。
+大家一般会记住一些常用的组合，譬如脚本常用:755 or 750
+e.g.
+   chmod 751 frog.png
+   chmod 240 frog.png
+0  000
+1  001
+2  010
+3  011
+4  100
+5  101
+6  110
+7  111
+
+Your home directory is your own personal space on the system. You should make sure that it stays that way.
+Most users would give themselves full read, write and execute permissions for their home directory and no permissions for the group or others however some people for various reasons may have a slighly different set up.
+Normally, for optimal security, you should not give either the group or others write access to your home directory, but execute without read can come in handy sometimes. This allows people to get into your home directory but not allow them to see what is there. An example of when this is used is for personal web pages.
+It is typical for a system to run a webserver and allow users to each have their own web space. A common set up is that if you place a directory in your home directory called public_html then the webserver will read and display the contents of it. The webserver runs as a different user to you however so by default will not have access to get in and read those files. This is a situation where it is necessary to grant execute on your home directory so that the webserver user may access the required resources.
+
+
+环境变量
+Linux中环境变量包括系统级和用户级，系统级的环境变量是每个登录到系统的用户都要读取的系统变量，而用户级的环境变量则是该用户使用系统时加载的环境变量。
+
+系统级:
+/etc/profile	该文件是用户登录时，操作系统定制用户环境时使用的第一个文件，应用于登录到系统的每一个用户。
+	并从/etc/profile.d目录的配置文件中搜集shell的设置.
+	不推荐修改这个文件，修改它需要重启后才能生效
+/etc/bashrc	系统级的bashrc文件
+	不要随便修改这个文件，修改后新开的BASH生效
+/etc/environment	在登录时操作系统使用的第二个文件,系统在读取你自己的profile前,设置环境文件的环境变量。
+
+用户级：
+~/.bash_profile	每个用户都可使用该文件输入专用于自己使用的shell信息,当用户登录时,该文件仅仅执行一次!默认情况下,他设置一些环境变量,执行用户的.bashrc文件。
+	修改它需要重启后才能生效
+~/.bashrc	该文件包含专用于你的bash shell信息,当登录时以及每次打开新的shell时,该文件都会被读取。
+
+查看环境变量(大小写敏感)：
+echo $VAR
+修改环境变量：
+方法1 ：  export PATH=/usr/local/mongodb/bin:$PATH     立即生效，仅对当前SESSION有效
+方法2：  vim ~/.bashrc

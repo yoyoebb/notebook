@@ -1,0 +1,145 @@
+* Org Mode
+** heading
+define heading
+    顶格n个'*' + 空格 ：定义对应级别的heading
+
+add/change heading & change heading level
+| M-<RET>   | 在下一行插入一个同级 heading                   |
+| M-S-<RET> | 在下一行插入一个同级 TODO heading              |
+| C-<RET>   | 在当前heading末尾插入一个同级 heading          |
+| C-S-<RET> | 在当前heading末尾插入一个同级 TODOheading      |
+| M-<u>/<d> | change current heading with the front/back one |
+| M-<l>/<r> | change current heading's level                 |
+| <TAB>     | open/folder current heading                    |
+| S-<TAB>   | open/folder all headings                       |
+
+toggle TODO status
+| C-c C-t | Toggle heading with TODO status |
+
+moving
+| C-c C-p | 移动到上一个heading                                     |
+| C-c C-n | 移动到下一个heading                                     |
+| C-c C-j | 锁定模式，定义<up>/<down>对应当前open的headings之间移动 |
+
+narrow buffer
+| C-x n s | narrow to current subtree |
+| C-x n w | cancel narrow             |
+
+** plain list
+define plain list (start with)
+   '-', '+', '*' : unordered list items
+   '1.', '1)' : ordered list items
+
+add / move / change level
+| M-<RET>     | 在当前行后新增一个同级 list item                        |
+| M-S-<RET>   | 在当前行后新增一个同级 TODO list item                   |
+| M-<u>/<d>   | change current item with the front/back one, same level |
+| M-S-<u>/<d> | change current item with the front/back one             |
+| M-<l>/<r>   | change current item's level                             |
+| M-S-<l>/<r> | adjust horizon position for all items                   |
+| S-<l>/<r>   | 当光标位于item的bullet前，可以切换bullet                |
+
+change item to heading
+| C-c * | 将list当前item变成当前heading的sub heading |
+
+** table
+define table
+ #+BEGIN_EXAMPLE
+ #+CAPTION: this is the caption for the next table(or link)
+ #+NAME: tab:basic-data
+ '|' 开头表示绘制表格
+ '|-'表示绘制水平线
+ #+END_EXAMPLE
+
+| <TAB>     | 光标移动到下一个cell，如果是最后的cell则新增一行 |
+| S-<TAB>   | 光标移动到上一个cell                             |
+| C-c C-c   | 重新格式化table，<TAB>/S-<TAB>也有同样效果       |
+| C-c SPC   | 清空当前cell                                     |
+| M-<RET>   | 当前cell移动到下一行，如果是最后一行则新增再移动 |
+| M-<l>/<r> | current column往左/右移动                        |
+| M-<u>/<d> | current row往上/下移动                           |
+| M-S-<l>   | kill当前column                                   |
+| M-S-<r>   | 在左边新增column                                 |
+| M-S-<u>   | kill当前row                                      |
+| M-S-<d>   | 在上方新增row                                    |
+
+** rich text
+
+* IDEA
+** edit
+| Ctrl + Shift + F10   |       |              | 执行main()/test()          |
+| Ctrl + F12           |       |              | 查看member                 |
+| Ctrl + H             |       |              | 查看继承关系               |
+| Alt + /              |       |              | 自动提示                   |
+| Alt + enter          |       |              | auto import                |
+| Alt + <u>/<d>        |       |              | 光标到上/下一个方法        |
+|----------------------+-------+--------------+----------------------------|
+| Ctrl + S             | emacs | Meta + F     | 当前文件内搜索             |
+| F3                   |       |              | 跳转下一个匹配项           |
+| Shift + F3           |       |              | 跳转上一个匹配项           |
+| Ctrl + F3            |       |              | 跳转下一个光标选中项       |
+| Ctrl + R             |       |              | 替换                       |
+|----------------------+-------+--------------+----------------------------|
+| Enter                |       | Ctr + O      | 光标处断行                 |
+| Shift + Enter        |       |              | 当前行下新增一行           |
+| Meta + D             |       |              | 复制当前行并插入下一行     |
+| Ctr + K              |       |              | kill到行尾                 |
+| ^Meta + C            |       | Alt+W        | 复制选中内容               |
+| ^Meta + X            |       | Ctr+W        | 剪切选中内容               |
+| ^Meta + V            |       | Ctr+Y        | 粘贴复制内容               |
+| Alt + Y              |       |              | 粘贴上一killing            |
+|----------------------+-------+--------------+----------------------------|
+| Ctrl + F/B           | emacs | <l>/<r>      | 光标往前/后1格             |
+| Shift + <l>/<r>      |       |              | 光标往前/后1格并选中       |
+| Ctrl + A/E           | emacs | fn + <l>/<r> | 光标到行首/尾              |
+| Shift + fn + <l>/<r> |       |              | 光标到行首/尾并选中        |
+| Ctrl + N/P           | emacs | <u>/<d>      | 光标往上/下1行             |
+| Shift + fn + <l>/<r> |       |              | 光标往上/下1行并选中       |
+| PageUp/PageDown      |       | fn + <u>/<d> | 光标往下/上1页             |
+| Ctrl + fn + <u>/<d>  |       |              | 光标到本页首行/尾行,不翻页 |
+| Ctrl + fn + <l>/<r>  | emacs |              | 光标到文件头/尾            |
+| Meta + A             |       |              | 全选                       |
+|----------------------+-------+--------------+----------------------------|
+|                      |       |              |                            |
+
+
+** project
+| Ctrl + Shift + F |   |               | 全局搜索           |
+| Shift + F6       |   |               | 选中文件重命名     |
+| Meta + S         |   | Ctrl+X,Ctrl+S | save all files     |
+| Ctrl + Shift + n |   |               | 将选定文件作为标签 |
+| Ctrl + n         |   |               | 打开指定标签文件   |
+|                  |   |               |                    |
+
+
+** debug
+| F8         | Step Over      |
+| F7         | Step into      |
+| Shift + F8 | Step out       |
+| F9         | Resume Program |
+
+* Sublime
+列编辑模式         Shift + 鼠标右键框选
+选定字符串后查找   光标选中指定字符串，Ctrl+D
+                   F3 : 往下查找
+                   Shift + F3 ：往下查找
+
+大小写切换         Ctrl + K + U :   转为大写
+                   Ctrl + K + L :   转为大写
+
+* Win 10
+Win热键处理
+    win10中自定义了很多win+?热键，还无法通过配置更改。但在通用键盘方案中，需要将Win键映射为Meta键使用，调整策略如下：
+    |  Win         | 弹出开始菜单     | ahk屏蔽         |
+    |  Win + ?     | A-Z，且非M,R,X   | 修改注册表禁用  |
+    |  Win + Space | 切换语言         | ahk屏蔽         |
+
+    另外默认语言是美国-英语，安装中文输入法后，会频繁切换语言，系统中可以配置为热键：ctrl+shift
+    为了和mac通用，我们通过ahk用ctrl+space来模拟
+
+    附ahk快捷键脚本，可以编译成exe文件后放在用户启动程序目录开机就运行
+    -----
+    ~LWin Up::Return
+    ~RWin Up::Return
+    #Space::
+    ^Space::^Shift

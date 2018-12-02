@@ -1,0 +1,114 @@
+#+SETUPFILE: ~/.emacs.d/org-templates/level-2.org
+#+TITLE: 20. Collection
+
+* Collections
+  Java标准库中提供了一套集合框架(java.util)，分为接口和具体实现类，按照面向接口编程的原则，我们通常将变量申明为接口类型，然后按照实际情况选择不同的实现类。
+
+[[../../images/Java/Collections_Interface.png]]
+
+  集合接口分成了两大类：Collection - 以element为单位 和 Map - 以key-value为单位
+** Collection体系
+*** 接口介绍  
+  + Iterable :: JSE 5中添加的便利接口，实现了该接口就可以使用for-each循环。
+    #+BEGIN_EXAMPLE
+    Iterator<E> iterator()        返回一个迭代器
+    #+END_EXAMPLE
+
+  + Collection :: Collection体系的顶层接口，代表集合。它定义了两个最基本的集合操作。
+    #+BEGIN_EXAMPLE
+    boolean add(E elemnt)         添加一个元素，成功返回true，失败返回false。
+    Iterator<E> iterator()        返回集合对应的迭代器
+    #+END_EXAMPLE
+    除此之外，Collection还定义了一些常用的操作：
+    #+BEGIN_EXAMPLE
+    int size()                    返回集合的大小              
+    boolean isEmpty()             判断集合是否为空             
+    boolean contains(Object o)    判断集合是否包含该元素(equals)
+    boolean remove(Object o)      从集合中移除指定元素(equals)
+    void clear()                  清空集合            
+    Object[] toArray()            返回包含所有元素的数组
+    #+END_EXAMPLE
+    
+  + Iterator :: Iterator是由Collection返回的迭代器，通过Iterator，我们可以遍历集合，删除元素。
+    #+BEGIN_EXAMPLE
+    E next()                       get next element             
+    boolean hasNext()              whether exists more elements 
+    void remove()                  remove element               
+    #+END_EXAMPLE		
+    Iterator类似于一个指针，指在两个元素之间，每次调用next()则往后移动一个位置，并返回跳跃的元素。remove()则从集合中删除next()返回的元素。但是遍历元素的顺序，由更底层实现类决定。
+    #+BEGIN_SRC java
+      Collection<String> c = ... ;
+      Iterator<String> iter = c.iterator() ;
+      while(iter.hasNext()){
+	  String element = iter.next() ;
+	  ...
+      }
+
+      // 如果仅仅遍历集合，我们可以用for-each，编译器会自动帮我们编译成Iterator实现
+      for (String element: c){
+	  ...
+      }
+    #+END_SRC
+  + List :: List定义一个有序的集合，其中的元素是按顺序排列的。有了顺序，我们就可以实现按序号访问、删除、替换、添加元素的一系列操作。它有两种主要实现：数组和链表。
+    #+BEGIN_EXAMPLE
+    void add(int index, E element) 在指定位置添加元素，后续元素依次后移 
+    void remove(int index)         删除指定位置元素，前置元素依次前移   
+    E get(int index)               返回指定位置元素                       
+    E set(int index, E element)    替换指定位置元素                       
+    ListIterator<E> listIterator() 返回List迭代器                         
+    #+END_EXAMPLE
+    
+  + ListIterator :: Listiterator是针对List的迭代器，它具有双方向遍历的能力
+    #+BEGIN_EXAMPLE
+    E next()/previous()             向前/后遍历List    
+    boolean hasNext()/hasPrevious() 判断前/后是否还有元素
+    int nextIndex()/previousIndex() 返回前/后元素的index 
+    void remove()                   删除指针前/后的元素   
+    void add(E element)             在指针前/后添加元素   
+    void set(E element)             替换指针前/后元素     
+    #+END_EXAMPLE
+    
+  + RandomAccess :: 标记接口，表明实现类具有随机访问的能力(采用数组的ArrayList实现了该接口)
+  + Set :: Set定义的是一个元素不重复的集合。它也有两种主要实现：哈希表和树。
+  + Queue :: Queue
+*** ArrayList & LinkedList
+  ~java.util.ArrayList<E>~ 正如其名，它实现了List接口，而底层存储用的是数组，从JSE5.0开始变成了generic class，它也是我们日常使用中最常见的集合类之一(另一个是HashMap)。
+  #+BEGIN_SRC java
+    // raw type
+    ArrayList staff = new ArrayList() ;                      
+
+    // generic type
+    ArrayList<Employee> staff = new ArrayList<Employee>() ;  
+    ArrayList<Employee> staff = new ArrayList<>() ;          // JSE7.0
+
+    // set array size at first
+    // when you know or have a good guess, how many elements you want to store
+    ArrayList<Employee> staff = new ArrayList<>(100) ;
+  #+END_SRC
+
+  我们已经知道，Java中的数组一旦初始化后，其大小就已经固定，那么ArrayList如何来保证存储足够多的元素呢？其原理是这样，ArrayList对外屏蔽了底层数组，它的size()体现的是存储的元素数量，和数组的length无关，如果size()要超过数组的length，ArrayList会自动新建一个更大的数组(old length * 2)并将旧数组的值复制到新数组里面去。
+
+  List中的元素索引和数组类似: 0 <= index < size()
+
+  ArrayList并不是线程安全，为了保证线程安全我们可以使用工具类返回一个基于fail-fast原理的线程安全的List
+  #+BEGIN_SRC java
+    List list = Collections.synchronizedList(new ArrayList(...));
+  #+END_SRC
+
+*** HashSet & TreeSet & EnumSet
+*** PriorityQueue & ArrayQueue
+
+** Map体系
+*** 接口介绍
+*** HashMap & TreeMap & EnumMap
+*** WeakHashMap & IdentityHashMap
+
+** Views & Wrappers
+** Algorithms Utils
+** Legacy Collections
+*** Vector
+*** Hashtable
+*** Enumeration
+*** Properties
+*** Stack
+*** BitSet

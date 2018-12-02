@@ -1,0 +1,139 @@
+* What's Java
+  Java于1995年正式问世（Sun的JamesGosling发明），是一种完全面向对象，平台无关性，安全可靠，主要面向Internet的开发工具（B/S）。
+
+  其主要特点有：
+  + java文件(源码)被JDK编译成class文件(字节码)，基于JRE中的JVM(Java虚拟机)来解释运行，这也是JAVA平台无关性的基础
+  + 取消了指针操作，在堆中创建对象，无用对象通过垃圾回收机制自动回收
+  + 大小写敏感，对象、变量的强制类型检查
+
+  从1.2版本开始，分成三种版本：
+  + Java 标准版(J2SE) ：基础语法、标准库
+  + Java 微缩版(J2ME) ：面向手机终端
+  + Java 企业版(J2EE) ：面向企业级应有
+
+* Version Release 
+| 1.0 | 1996.01.23 |     |
+| 1.1 | 1997.02.04 |     |
+| 1.2 | 1998.12.04 |     |
+| 1.3 | 2000.05.08 |     |
+| 1.4 | 2002.02.13 |     |
+| 5.0 | 2004.09.30 |     |
+|   6 | 2006.12.11 |     |
+|   7 | 2009.02.19 |     |
+|   8 | 2014.03.18 | LTS |
+|   9 | 2017.09.21 |     |
+|  10 | 2018.03.21 |     |
+|  11 | 2018.09.25 | LTS |
+
+* Version features
+** JDK 1.0
+   + JVM
+   + Applet
+   + AWT
+     
+** JDK 1.1
+   + an extensive retooling of the AWT event model
+   + inner classes added to the language
+   + JavaBeans
+   + JDBC 1.0
+   + RMI
+   + reflection which supported Introspection only, no modification at runtime was possible.
+   + JIT (Just In Time) compiler on Microsoft Windows platforms, produced for JavaSoft by Symantec
+   + Internationalization and Unicode support originating from Taligent[8]
+** J2SE 1.2
+   + strictfp keyword
+   + the Swing graphical API was integrated into the core classes
+   + Sun's JVM was equipped with a JIT compiler for the first time
+   + Java plug-in
+   + Java IDL, an IDL implementation for CORBA interoperability
+   + Collections framework
+** J2SE 1.3
+   + HotSpot JVM included (the HotSpot JVM was first released in April 1999 for the J2SE 1.2 JVM)
+   + RMI was modified to support optional compatibility with CORBA
+   + Java Naming and Directory Interface (JNDI) included in core libraries (previously available as an extension)
+   + Java Platform Debugger Architecture (JPDA)
+   + JavaSound
+   + Synthetic proxy classes
+   
+** J2SE 1.4
+   走向成熟的一个版本
+   + Language changes
+     + assert keyword (specified in JSR 41)
+
+   + Library improvements
+     + Regular expressions modeled after Perl regular expressions
+     + Exception chaining allows an exception to encapsulate original lower-level exception
+     + Internet Protocol version 6 (IPv6) support
+     + Non-blocking I/O (Java) (named NIO) (specified in JSR 51)
+     + Logging API (specified in JSR 47)
+     + Image I/O API for reading and writing images in formats like JPEG and PNG
+     + Integrated XML parser and XSLT processor (JAXP) (specified in JSR 5 and JSR 63)
+     + Integrated security and cryptography extensions (JCE, JSSE, JAAS)
+     + Java Web Start included (Java Web Start was first released in March 2001 for J2SE 1.3) (specified in JSR 56)
+     + Preferences API (java.util.prefs)
+   
+** J2SE 5.0
+   支持Windows 9x, me的最后一版
+   + language
+     + Generics: 编译时类型安全检查，去除不必要的cast
+     + Metadata: also called annotations; 元数据编程时代的开始
+     + Autoboxing/unboxing: 基本类型和包装类型自动转换
+     + Enumerations: 枚举类型
+     + Varargs: 方法可变参
+     + Enhanced for each loop: 
+     + Improved semantics of execution for multi-threaded Java programs; the new Java memory model addresses issues of complexity, effectiveness, and performance of previous specifications
+     + Static imports
+
+   + libarary
+     + Automatic stub generation for RMI objects
+     + Swing: New skinnable look and feel, called synth
+     + The concurrency utilities in package java.util.concurrent
+     + Scanner class for parsing data from various input streams and buffers
+
+** Java SE 6
+   + Support for older Win9x versions dropped; unofficially, Java 6 Update 7 was the last release of Java shown to work on these versions of Windows.[citation needed] This is believed[by whom?] to be due to the major changes in Update 10.
+   + Scripting Language Support : Generic API for tight integration with scripting languages, and built-in Mozilla JavaScript Rhino integration.
+   + Dramatic performance improvements for the core platform, and Swing.
+   + Improved Web Service support through JAX-WS.
+   + JDBC 4.0 support.
+   + Java Compiler API : an API allowing a Java program to select and invoke a Java Compiler programmatically.
+   + Upgrade of JAXB to version 2.0: Including integration of a StAX parser.
+   + Support for pluggable annotations.
+   + Many GUI improvements, such as integration of SwingWorker in the API, table sorting and filtering, and true Swing double-buffering (eliminating the gray-area effect).
+   + JVM improvements include: synchronization and compiler performance optimizations, new algorithms and upgrades to existing garbage collection algorithms, and application start-up performance.
+** Java SE 7
+   Sun被Oracle收购
+   + language
+     + Strings in switch
+     + Automatic resource management in try-statement
+     + Improved type inference for generic instance creation, aka the diamond operator <>
+     + Simplified varargs method declaration
+     + Binary integer literals
+     + Allowing underscores in numeric literals
+     + Catching multiple exception types and rethrowing exceptions with improved type checking
+
+   + jvm & library
+     + JVM support for dynamic languages, with the new invokedynamic bytecode , following the prototyping work currently done on the Multi Language Virtual Machine
+     + Compressed 64-bit pointers(available in Java 6 with -XX:+UseCompressedOops)
+     + Concurrency utilities
+     + New file I/O library adding support for multiple file systems, file metadata and symbolic links. The new packages are java.nio.file, java.nio.file.attribute and java.nio.file.spi
+     + Timsort is used to sort collections and arrays of objects instead of merge sort
+     + Library-level support for elliptic curve cryptography algorithms
+     + An XRender pipeline for Java 2D, which improves handling of features specific to modern GPUs
+     + New platform APIs for the graphics features originally implemented in version 6u10 as unsupported APIs
+     + Enhanced library-level support for new network protocols, including SCTP and Sockets Direct Protocol
+     + Upstream updates to XML and Unicode
+     + Java Deployment Rulesets
+** Java SE 8
+   这个版本中不再支持XP
+   + lambda expressions
+   + default & static method in interface
+   + Annotation on Java Types
+   + Unsigned Integer Arithmetic
+   + Repeating annotations
+   + Date and Time API
+   + Statically-linked JNI libraries
+   + Launch JavaFX applications
+   + JVM Memory remove the permanent generation
+** Java SE 9
+   + 

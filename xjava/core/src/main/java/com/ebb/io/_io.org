@@ -1,0 +1,64 @@
+* Standard Input、Output
+** Reading Input
+=System.in= 代表了标准输入流(console)，但我们没法直接操作它。需要用 =java.util.Scanner= 来包装它。
+#+BEGIN_SRC java -n
+import java.util.Scanner ;
+
+public class InputTest{
+    public static void main(String[] args){
+        Scanner in = new Scanner(System.in) ;
+	
+	System.out.print("What is your name? ") ;
+	String name = in.nextLine() ;
+
+	System.out.print("How old are you? ") ;
+	Int age = in.nextInt() ;
+
+	//display output on console
+	System.out.println("Hello, " + name + ". Next year, you'll be " + (age + 1)) ;
+    }
+}
+#+END_SRC
+但Scanner有一个不好的地方，当我们通过console输入密码时，它会明文显示，不太安全，所以JSE6.0又引入了一个 =java.io.Console=
+#+BEGIN_EXAMPLE
+Console cons = System.console() ;
+String username = cons.readLine("User name: ") ;
+Char[] password = cons.readPassword("Password: ") ;  //出于安全考虑，password读回来的是一个char数组
+#+END_EXAMPLE
+** Formatting Output
+~System.out~ 代表了标准输出流(console)，它提供了 ~print~ 和 ~println~ 来进行输出，但是这两个方法无法对输出内容进行格式化，还需要其他Format类进行配合。
+
+JSE5.0开始，终于借鉴了C语言，提供了一个可以format输出内容的方法: ~printf~
+#+BEGIN_EXAMPLE
+// %s -string
+// %d -decimal integer
+// %f -fixed-point floating-point 
+// %b -boolean
+// %% -percent sybol
+// %n -line separator 
+printf("Hello, %s, Next Year, you'll be %d", name, age) ;
+
+//还可以做更多flag定制
+printf("%.2f", 10000.0/3.0);      //3,333.33
+#+END_EXAMPLE
+
+如果只是为了生成格式化字符串而不需要标准输出，也可以使用String.format。
+
+在正式工程里面，我们在代码中一般通过log组件来定制输出，而不是直接使用 ~System.out~
+** 文件的输入和输出
+我们同样可以通过 ~Scanner~ 来读取文件内容。
+#+BEGIN_EXAMPLE
+// java.util.Scanner    (JSE5.0)
+// java.nio.file.Paths  (JSE7.0)
+Scanner in = new Scanner(Paths.get("myFile.txt"), "UTF-8") ;
+String line = in.readLine() ;   
+#+END_EXAMPLE
+
+为了往文件输出，我们可以使用 ~java.io.PrintWriter~
+#+BEGIN_EXAMPLE
+PrintWriter out = new PrintWriter("myfile.txt", "UTF-8") ;
+#+END_EXAMPLE
+
+读写文件时，我们需要提供文件路径：  
+ + 绝对路径: 如 ~"C:\\mydirectory\\myfile.txt"~ or ~"/home/me/mydirectory/myfile.txt"~
+ + 相对路径，相对于 ~System.getProperty("user.dir")~ 一般是启动java命令的当前目录

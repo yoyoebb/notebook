@@ -1,0 +1,94 @@
+* ibatis -> mybatis
+  ibatis原本是apache旗下的开源项目，发布了1、2两个版本，2010年之后项目托管到google平台并更名为mybatis，2013年后又迁到了GitHub
+
+** maven dependency
+   截止2018.8.22的最新版本是3.4.6
+   <dependency>
+     <groupId>org.mybatis</groupId>
+     <artifactId>mybatis</artifactId>
+     <version>x.x.x</version>
+   </dependency>
+
+* mybatis config
+** settings
+系统设置项如下：
+| cacheEnabled                     | [true]/false                                            |                     |
+| lazyLoadingEnabled               | true/[false]                                            |                     |
+| aggressiveLazyLoading            | true/[false]                                            | 3.4.1之前默认为true |
+| multipleResultSetsEnabled        | true/[false]                                            |                     |
+| useColumnLabel                   | [true]/false                                            |                     |
+| useGeneratedKeys                 | true/[false]                                            |                     |
+| autoMappingBehavior              | NONE/[PARTIAL]/FULL                                     |                     |
+| autoMappingUnknownColumnBehavior | [NONE]/WARNING/FAILING                                  |                     |
+| defaultExecutorType              | [SIMPLE]/REUSE/BATCH                                    |                     |
+| defaultStatementTimeout          | Any positive integer                                    | default=NULL        |
+| defaultFetchSize                 | Any positive integer                                    | default=NULL        |
+| safeRowBoundsEnabled             | true/[false]                                            |                     |
+| safeResultHandlerEnabled         | [true]/false                                            |                     |
+| mapUnderscoreToCamelCase         | true/[false]                                            |                     |
+| localCacheScope                  | [SESSION]/STATEMENT                                     |                     |
+| jdbcTypeForNull                  | JdbcType enumeration                                    | default=OTHER       |
+| lazyLoadTriggerMethods           | [equals,clone,hashCode,toString]                        |                     |
+| defaultScriptingLanguage         | [org.apache.ibatis.scripting.xmltags.XMLLanguageDriver] |                     |
+| defaultEnumTypeHandler           | [org.apache.ibatis.type.EnumTypeHandler]                | since 3.4.5         |
+| callSettersOnNulls               | true/[false]                                            |                     |
+| returnInstanceForEmptyRow        | true/[false]                                            | since 3.4.2         |
+
+| logPrefix | Any String       | default=NULL |
+| logImpl   | one of following | default=NULL |
+"SLF4J | LOG4J | LOG4J2 | JDK_LOGGING | COMMONS_LOGGING | STDOUT_LOGGING | NO_LOGGING"
+
+| proxyFactory         | CGLIB/[JAVASSIST] | >=3.3       |
+| vfsImpl              | default=NULL      |             |
+| useActualParamName   | [true]/false      | since 3.4.1 |
+| configurationFactory | default=NULL      | since 3.2.3 |
+** default typeAliases
+** default typeHandlers
+** logging
+    Mybatis会在运行时按以下顺序自动选择log组件(没有找到则不打印log):
+    + SLF4J
+    + Apache Commons Logging
+    + Log4j 2
+    + Log4j
+    + JDK logging
+
+    如果app server自带了特定log组件在server classpath，但又不是你想要log组件，可以通过setting进行显式设置，like:
+    #+BEGIN_SRC xml
+    <settings>
+      ...
+      <setting name="logImpl" value="LOG4J"/>
+      ...
+    </settings>
+    #+END_SRC
+* Overriding the Configuration Class
+In addition to modifying core MyBatis behaviour with plugins, you can also override the Configuration class entirely. Simply extend it and override any methods inside, and pass it into the call to the SqlSessionFactoryBuilder.build(myConfig) method. Again though, this could have a severe impact on the behaviour of MyBatis, so use caution.
+* Mybatis with Spring framework
+    项目中一般都是在springframework中集成mybatis。
+** config step
+    1. 通过SqlSessionFactoryBean来初始化SqlSessionFactory
+    2. 通过MapperScannerConfigurer来自动注册Mapper
+    3. 在service中声明mapper并autowired 
+** SqlSessionFactoryBean    
+    它实现了FactoryBean<SqlSessionFactory>, InitializingBean, ApplicationListener<ApplicationEvent>等框架接口。并通过afterPropertiesSet()初始化SqlSessionFactory
+
+    #+BEGIN_SRC xml
+      <!-- 集成mybatis -->
+      <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+	  <property name="dataSource" ref="dataSource" />
+	  <!-- 核心配置文件 可以忽略-->
+	  <property name="configLocation" value="classpath:conf/sqlMapConfig.xml" />
+	  <property name="mapperLocation" value="classpath:sql-map/*.xml" />
+      </bean>
+    #+END_SRC
+** MapperScannerConfigurer
+    它实现了BeanDefinitionRegistryPostProcessor, InitializingBean, ApplicationContextAware, BeanNameAware 等框架接口，并通过postProcessBeanDefinitionRegistry()把扫描的Mapper自动注册到spring容器。
+
+    #+BEGIN_SRC xml
+      <!-- 自动扫描并注册所有的mapper,package分隔符",; \t\n" -->
+      <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+	<property name="basePackage" value="${mybatis.mapper.packages}" />
+      </bean>
+    #+END_SRC
+
+
+

@@ -1,0 +1,126 @@
+* 基本概念
+** Network
+  + 按照范围和规模，可以分为
+    LAN : Local Area Network，局域网，局域网里配置的是私有IP，(LAN_IP)。
+    WAN : Wide Area Network，广域网，广域网的IP通常由ISP提供，(WAN_IP)，有些ISP财大器粗，直接用Global_IP做WAN_IP。
+    Internet : 联通全球的网络，采用由IANA分配的Global_IP进行互联。
+
+  + 按照通信模式，可以分为
+    Ethernet : 以太网，是目前应用最普遍的局域网技术，取代了其他局域网标准如令牌环、FDDI和ARCNET。IEEE组织的IEEE 802.3标准制定了以太网的技术标准，它规定了包括物理层的连线、电子信号和介质访问层协议的内容。
+
+** Ethernet
+  + 共享式以太网
+    所有的节点都共享一段传输信道，并且通过该共享信道传输信息。共享式以太网一般分为总线型和星型（Hub）。
+    数据传输的特点：
+        - 半双工。即所有节点都可以发送和接受数据，但是同一时刻只能选择发送或者接受数据。
+        - 出现冲突时，以太网采用“带冲突检测载波侦听多路访问”的介质访问控制方法，简称CSMA/CD。
+        - 对于较大的数据，以太网通过分包的方式传输，以太网中的数据包称为frame（包含源MAC和目标MAC）
+        - 采用广播方式传输数据，所有节点都会收到数据包，但只有节点MAC与目标MAC相符才会保留包，否则抛弃包。
+
+  + 交换式以太网
+    交换式以太网是随着传输介质和交换技术的发展，以交换式集线器（switching hub）或交换机（switch）为中心构成，是一种星型拓扑结构的网络。它同时提供多个通道，比传统的共享式集线器提供更多的带宽，传统的共享式10MBPS/100MPS以太网采用广播式通信方式，每次只能在一对用户间进行通信，如果发生碰撞还得重试，而交换式以太网允许不同用户间进行传送，比如，一个16端口的以太网交换机允许16个站点在8条链路间通信。
+
+** MAC地址
+  MAC地址通常和网卡绑定在一起，为48bit的全球唯一编码，对应6位byte，12位HEX。
+  地址分为单播地址(首位为0)、多播地址(首位为1)和广播地址(全为1)
+
+** CSMA/CD
+  有人将CSMA/CD的工作过程形象的比喻成很多人在一间黑屋子中举行讨论会，参加会议的人都是只能听到其他人的声音。每个人在说话前必须先倾听，只有等会场安静下来后，他才能够发言。人们将发言前监听以确定是否已有人在发言的动作成为"载波侦听"；将在会场安静的情况下每人都有平等机会讲话成为“多路访问”；如果有两人或两人以上同时说话，大家就无法听清其中任何一人的发言，这种情况称为发生“冲突”。发言人在发言过程中要及时发现是否发生冲突，这个动作称为“冲突检测”。如果发言人发现冲突已经发生，这时他需要停止讲话，然后随机后退延迟，再次重复上述过程，直至讲话成功。如果失败次数太多，他也许就放弃这次发言的想法。
+
+* TCP/IP协议簇
+  TCP/IP协议簇分为五层，从上往下分为：
+  |应用层     |  ...                     |  data      |          | (OSI)显示层、会话层、应用层 |
+  |传输层     |  TCP、UDP                |  segment   |  port    | (OSI)传输层                 |
+  |网络层     |  IP、(ICMP、IGMP)        |  packet    |  ip      | (OSI)网络层                 |
+  |网络接口层 |  以太网协议、(ARP、RARP) |  frame     |  mac     | (OSI)数据链路层             |
+  |硬件层     |                          |  010101    |          | (OSI)硬件层                 |
+  + 以太网协议属于OSI二层，主要在本网段内应用
+  + ARP、RARP衔接OSI二层和三层(处理IPv4和MAC的映射)
+  + IP协议在OSI三层，通过路由和NAT支持，让通信具有了跨网段的能力。分为IPv4和IPv6两个版本
+  + IP协议和TCP协议是其中应用最为广泛的协议。
+
+** 以太网协议(Ethernet II framing)
+   | T MAC | S MAC | TYPE  | Data     | FCS |
+   | 6B    |   6B  |  2B   | 46-1500B | 4B  |
+   T MAC + S MAC + TYPE为frame header(14B)
+
+   其中TYPE定义了Data中封装的packet类型，部分定义如下表：
+   | 0x0800 | Internet Protocol version 4 (IPv4)          |
+   | 0x0806 | Address Resolution Protocol (ARP)           |
+   | 0x8035 | Reverse Address Resolution Protocol (RARP)  |
+
+*** Switch(交换机)
+  交换机会记录端口和所连主机MAC地址，在获得数据帧后，会根据目标MAC直接发送给相应端口而不是广播出去，减少了线路冲突的可能性。
+
+*** ARP (Address Resolution Protocol)
+  ARP是OSI二层协议，其作用是已知目标IP(同网段)，寻找目标MAC。请求是群播MAC，响应是单播MAC
+  协议格式:
+  工作流程如下：
+  1. Host A查找本机的ARP Cache，如果目标IP与目标MAC对应关系不存在
+  2. Host A根据目标IP，查找本地路由表，发现目标IP在同网段，本地广播ARP请求(目标MAC地址为广播MAC)
+     | S IP   | S MAC | T IP | T MAC             |
+     | IP_A   | MAC_A | IP_B | FF FF FF FF FF FF |
+  3. 目标主机Host B收到ARP请求后，判断目标IP为自己所有，在本机ARP Cache添加Host A的IP和MAC，并返回ARP响应
+     | S IP   | S MAC | T IP | T MAC  |
+     | IP_B   | MAC_B | IP_A | MAC_A  |
+  4. Host A收到ARP响应后，更新本机的ARP Cache。
+  经过一次ARP请求和响应，Host A和Host B都知道了对方的IP和MAC。
+
+  本机的ARP通常设置了有效期，为了效率，到期后可能会发送一条单播MAC的ARP请求，并根据是否收到ARP响应来判断目标主机是否真的过期。
+
+
+** IP协议(Internet Protocol)
+  IP是OSI三层协议，其作用是在源IP和目标IP之间进行通信。根据IP Address的长度分为了两个版本，IPv4和IPv6。IP协议不保证传输的可靠性，数据包在传输过程中可能丢失，可靠性可以在上层协议或应用程序中提供支持。
+
+  + IPv4 (4B, 32bit)，采用4组(0-255)的数字表示，如：192.168.0.1
+    IPv4主要的问题是编码短，可用IP数少(40多亿)，随着互联时代的到来，公网IP（Internet上可以路由的IP）已经枯竭。
+    通过NAT(Network Address Translation)技术，让私网IP也可以与公网IP通信，解决了IP不足的窘况。
+
+  + IPv6 (16B, 128bit)，
+
+  IP packet分为 packet header(20B) + packet data两部分。
+
+*** Router(路由器)
+  路由器是工作在第三层的网络设备，同时兼有交换机的功能，可以在不同的链路层接口之间转发数据包。
+  假设不同网段的Host A(IP_A,MAC_A)想和Host B(IP_B,MAC_B)通信，其流程如下：
+  1. Host A 发现IP_B不属于本网段，通过ARP请求查询默认网关GA的MAC，后，发送IP包给默认网关
+     [MAC_A, MAC_GA][IP_A][IP_B]
+  2. 路由器收到MAC地址为自己，但IP不为自己的数据包，查询本地路由表，找出下一跳网关GN并通过ARP请求获取其MAC，转发IP包
+     [MAC_GA,MAC_GN][IP_A][IP_B]
+  3. 最终来到了Host B的网关GB，通过路由表发现IP_B在本网段，通过ARP请求获取MAC_B，广播IP包
+     [MAC_GB,MAC_B][IP_A][IP_B]
+  IP包在传输过程中不发生变化，但在经过路由器转发后，会重新封装以太frame，S_MAC和T_MAC会不断变化
+
+  如果IP_A和IP_B属于私有IP，则传统的路由器模式无法转发数据包，这时需要NAT的支持。
+
+** NAT(Network Address Translation, 网络地址转换)
+  NAT是在IP地址日益缺乏的情况下产生的，它的主要目的就是为了能够地址重用。NAT分为两大类，基本的NAT和NAPT(Network Address/Port Translator)
+
+  + Basic NAT
+    最先提出的是基本NAT，它的产生基于如下事实：一个私有网（域）中的节点中只有很少的节点需要与外网连接（上世纪90年代中期的天真想法...）。
+    因此，基本NAT实现的功能很简单，针对保留网段子网内的少数IP地址，如果这些节点需要访问外部网络，基本NAT就负责将它们的IP转化为一个全球唯一的IP然后发送出去。(基本NAT是1对1替换，它会改变IP包中S_IP，但是不会改变端口。)
+
+  + NAPT (Network Address/Port Translation)
+    随着公网IP的枯竭和互联网的繁华，越来越多的主机只能分配到私网IP，但它们都有联网需求，而基本NAT只能做1对1替换，于是NAPT应运而生。
+    NAPT把手伸到了传输层，它在进行地址转换时，会同时改变IP包的S_IP和TCP/UDP包的S_PORT，以支持1对多并发替换。
+    S_IP : S_PORT <-> NAT_IP : NAT_PORT
+
+  目前基本上都在使用NAPT。
+
+*** NAPT转换模式
+  针对同一内网主机访问多台外网主机时，NAPT也存在几种类型的转换模式
+  + Cone NAT
+    不管目标IP和端口，在会话期内，相同的S_IP:S_PORT总是映射相同的NAT_IP:NAT_PORT
+    根据地址转换表对外部访问的限制，又分为：
+    + Port Restricted Cone NAT (IP+PORT限制)
+      如果存在 IP_A:PORT_A -> IP_N:PORT_N -> IP_B:PORT_B
+      那么可以 IP_A:PORT_A <- IP_N:PORT_N <- IP_B:PORT_B
+    + Restricted Cone NAT (IP限制)
+      如果存在 IP_A:PORT_A -> IP_N:PORT_N -> IP_B:PORT_B
+      那么可以 IP_A:PORT_A <- IP_N:PORT_N <- IP_B:PORT_X
+    + Full Cone NAT (无限制)
+      如果存在 IP_A:PORT_A -> IP_N:PORT_N -> IP_B:PORT_B
+      那么可以 IP_A:PORT_A <- IP_N:PORT_N <- IP_X:PORT_X
+  + Symmetric NAT
+    在会话期内，相同的S_IP:S_PORT的请求，可能映射不同的NAT_IP:NAT_PORT
+

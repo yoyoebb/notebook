@@ -1,0 +1,152 @@
+* Web Project
+** standard directory
+    在J2EE中，web project主要遵循servlet规范，并具有特定的目录结构，如下所示：
+    #+BEGIN_EXAMPLE
+      webapp
+	 |--xxx                  <statci resources, like impages、css、scrpts>
+	 |--WEB-INF
+	       |--classes        <编译后的class文件>
+	       |--lib            <webapp依赖的外部jar文件
+	       |--<view>         <视图文件，可以是jsp、模版、...>
+	       |--web.xml        <servlet规范的配置文件>
+    #+END_EXAMPLE
+    WEB-INF目录和web.xml是web project必不可少的元素。
+
+    webapp下面除WEB-INF目录以外的资源，都是不受保护的，可以直接被客户端访问，主要用来存放公用的静态图片、css/js等静态资源，以及无需保护的jsp文件。客户端通过基于webapp root的相对路径(URI/URL)直接请求这些不受保护的资源(前提是请求没有被web.xml中的匹配规则拦截)。
+    #+BEGIN_EXAMPLE
+    <link href="css/login_css.css" rel="stylesheet" type="text/css" />
+    <script type="text/javascript" src="js/login_js.js" />
+    <img alt="" src="images/1.jpg"
+    #+END_EXAMPLE
+    注：实际上是通过tomcat自带的conf/web.xml中定义的default servlet和jsp servlet来处理。
+
+    WEB-INF目录下的资源都是受保护的，只能被webapp内部程序访问，客户端无法直接访问，主要用于存放视图文件、依赖包、配置文件、class文件等。
+** maven web project
+    在maven中，web project同样有约定的标准目录结构。
+    #+BEGIN_EXAMPLE
+      project_root
+	   |----pom.xml
+	   |----src
+		 |----main
+		       |----java/
+		       |----resources/
+		       |----webapp
+			      |----index.jsp
+			      |----WEB-INF
+				      |----web.xml
+    #+END_EXAMPLE
+
+** component
+   Sevlet规范中，定义了以下组件：
+   | ServletContext | 容器应用上下文         |
+   | Servlet        | Http请求处理           |
+   | ServletConfig  | Servlet的配置参数      |
+   | Filter         | Http请求和响应的过滤器 |
+   | Listener       | 事件监听器             |
+   |----------------+------------------------|
+   | Request        | Http请求包装类         |
+   | Response       | Http响应包装类         |
+   | Session        | 服务端会话包装类       |
+   | Cookie         | 浏览器缓存包装类       |
+   |                |                        |
+** web application container
+    实现了sevlet规范，兼容HTTP协议的应用，被称为J2EE web application container。常见的容器有：tomcat、jetty
+
+    容器收到Http请求后，会根据web.xml中的URL mapping规则，将请求交给指定的filter或servlet处理并返回Http响应，如果没有匹配成功，则返回404错误。
+*** default servlet & jsp servlet
+    tomact是通过default servlet 和 jsp servlet来实现无保护资源的自由访问的，它们定义在tomcat的conf/web.xml中，并被下面的所有web app继承(也可以覆盖)
+    + default servlet
+      #+BEGIN_SRC xml
+	<web-app>
+	  <servlet>
+	    <servlet-name>default</servlet-name>
+	    <servlet-class>org.apache.catalina.servlets.DefaultServlet</servlet-class>
+	    ...
+	  </servlet>
+
+	  <!-- The mapping for the default servlet -->
+	  <servlet-mapping>
+	    <servlet-name>default</servlet-name>
+	    <url-pattern>/</url-pattern>
+	  </servlet-mapping>
+	</web-app>
+      #+END_SRC
+
+    + jsp servlet
+      #+BEGIN_SRC xml
+	<web-app>
+	  <servlet>
+	    <servlet-name>jsp</servlet-name>
+	    <servlet-class>org.apache.jasper.servlet.JspServlet</servlet-class>
+	    ...
+	  </servlet>
+  
+	  <!-- The mappings for the JSP servlet -->
+	  <servlet-mapping>
+	    <servlet-name>jsp</servlet-name>
+	    <url-pattern>*.jsp</url-pattern>
+	    <url-pattern>*.jspx</url-pattern>
+	  </servlet-mapping>
+	</web-app>
+      #+END_SRC
+
+* Life Cycle
+** init
+** service 
+** close
+* Servlet技术
+** web.xml
+  web.xml是Java Web Project中的标准配置文件，通过它来向servlet容器声明：
+  1. context parameter
+  2. listener
+  3. servlet and servlet mapping
+  4. filter and filter mapping
+  5. other config
+*** Schema
+  web.xml同样遵循xml规范，我们可以通过DTD(2.3及之前) or XSD(2.4及之后)来校验元素配置的正确性。
+  + 2.3
+    #+BEGIN_SRC xml
+      <?xml version="1.0" encoding="ISO-8859-1"?>  
+      <!DOCTYPE web-app PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN" "http://java.sun.com/dtd/web-app_2_3.dtd">  
+      <web-app />  
+    #+END_SRC
+
+  + 2.4
+    #+BEGIN_SRC xml
+      <?xml version="1.0" encoding="UTF-8"?>  
+      <web-app xmlns="http://java.sun.com/xml/ns/j2ee"   
+	  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"  
+	  xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">  
+      </web-app>
+    #+END_SRC
+
+  + 2.5 & 3.0
+    #+BEGIN_SRC xml
+      <?xml version="1.0" encoding="UTF-8"?>  
+      <!--schemaLocation replace "web-app_2_5" to "web-app_3_0" when using 3.0 version-->
+      <web-app xmlns="http://java.sun.com/xml/ns/javaee"  
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"  
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">  
+      </web-app> 
+    #+END_SRC
+
+
+** URL mapping
+    Servlet和Filter都可以处理HTTP请求，它们的作用关系是通过在web.mxl中配置URL Mapping来实现(<servlet-mapping>、<filter-mapping>)，servlet/filter和url-pattern可以是1对多的关系。
+    
+    Mapping规则可以分为两大类
+    1. 以'/'开头的路径映射，可以指定完全路径，也可以使用'*'进行通配，e.g. '/aaa/bbb', '/aaa/*'。
+    2. '*.xxx'的类型映射，如'*.do', '*.htm'
+    3. 默认匹配'/'，可以匹配所有的请求
+    匹配的优先级是： 完全路径 > 最长路径通配 > 类型通配 > default servlet
+
+    Mapping过程
+    1. 处理URL
+       当Http请求来到Servlet容器时，容器会将请求的url中的应用上下文路径移除后，对剩余路径进行匹配。
+       如'http://localhost/domain/aaa.html'中，应用上下文为'/domain'，剩余路径为'/aaa.html'。
+    2. 匹配Filter
+    3. 匹配Servlet/JSP
+    4. 如果没有servlet被匹配，则匹配Default Servlet ('/')
+
+    Filter和Servlet的匹配区别在于，匹配到的Filter能够按优先级链式处理请求，但只有按优先级匹配的第1个Servlet能够处理请求并直接返回。(可以通过转发功能来让其他servlet来处理请求，但实质上是一个新的URL匹配过程。)
+    注：由于Spring框架的统治地位，servlet和filter组件都被弱化成POJO，一般只需要配置spring的特殊servlet和filter并匹配所有请求，在内部再通过其他mapping规则来指定相应的处理类和方法。

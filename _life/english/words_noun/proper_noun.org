@@ -1,0 +1,51 @@
+* continent & country
+| Europe    | European |   euro |
+| England   | English  |  pound |
+| France    | French   |        |
+| Germany   | German   |        |
+| Italy     | Italian  |        |
+| Switzerland| Swiss   |
+| Spain     | Spanish  |        |
+| Portugal  | Portuguese |      |
+| Rome      | Roman    |         |
+| Greece    | Greek    |        |
+| Russia     | Russian  |       |
+
+| North America |      |
+| America   | American |    dollar    |
+| Canada    | Canadian |
+
+| Asia      | Asian    |
+| China     | Chinese  |
+| Japan     | Japanese |
+| Korea     | Korean   |
+| India     | Indian   |
+
+| Africa    | African  |
+
+| Oceania   | Oceanian   |
+| Australia | Australian |
+
+* ocean
+the Atlantic (Ocean)
+the Indian (Ocean)
+the Pacific (Ocean)
+the Arctic (Ocean)
+
+
+* month、 weekday、 holiday
+January, February, March, April, May, June, July, August, September, October, November, December
+
+Monday, TuesDay, Wednesday, Thursday, Friday, Saturday, Sunday
+
+* Solar System
+sun
+Mercury
+Hesper
+earth  (moon)
+Mars
+Saturn
+Jupiter
+
+* famous people
+| Marx  | Marxism  | Marxist | Marxian |

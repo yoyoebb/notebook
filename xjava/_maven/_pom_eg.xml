@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <!-- <modelVersion>
+         POM版本号，Maven 2&3 目前唯一支持的版本就是4.0.0
+    -->
+    <modelVersion>4.0.0</modelVersion>
+
+
+    <!--
+         POM文件必备的三要素，这三个元素也称为Maven Project的坐标
+             - groupId代表company，如：hk.com.hkex
+             - artifactId代表project/module，如：ctcs-parent | ctcs-api | ctcs-cb-api…
+             - version表示project/module版本号
+         * 如果是module，groupId、version可以隐式继承自parent POM
+    -->
+    <groupId>com.ebb</groupId>
+    <artifactId>MyApp</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+
+    <!-- <name>
+
+    -->
+    <name>MyApp</name>
+
+
+    <!-- <parent>
+         parent元素用于引用父POM，同样通过三要素来定位，如果没有指定parent，默认继承Super POM
+         子POM可以从父POM继承：
+             - groupId & version
+             -
+    -->
+    <parent>
+        <groupId>com.ebb</groupId>
+        <artifactId>demo</artifactId>
+        <version>1.0</version>
+    </parent>
+
+
+    <!-- <packaging>
+         project/module打包方式：
+             - pom   父project或父module通常都指定为pom
+             - jar   如果不指定，默认是jar
+             - war   t_spring project指定为war
+    -->
+    <packaging>pom</packaging>
+
+
+    <!-- <modules>
+         modules元素用于在多模块项目的rootModule中限定subModule
+         子模块可以通过parent继承rootModule(不是必须)，将各个功能拆分成子Module单独打包，方便复用和分模块维护
+         常见结构：1.单Web应用多module。 2.多Web应用多module
+    -->
+    <modules>
+        <module>sub-module-artifactId</module>
+        <module>third-project/pom-example.xml</module>
+    </modules>
+
+
+    <!-- <properties>
+         通过properties元素，我们可以自定义key-value，并以${key}的形式来给其他元素赋值
+         在POM中，一共有以下几种变量赋值的方式
+             - ${env.x}       获取系统环境变量的值，如: ${env.PATH}
+             - ${project.x}   获取POM文件project根元素下的值，如: ${project.version}
+             - ${settings.x}  获取settings文件中根元素settings下的值，如：${settings.offline}
+             - ${key}    获取properties元素下指定key的值，如：${org.postgresql.version}
+    -->
+    <properties>
+        <!--
+             key有两种
+             predefined_key ： 预定义的key，通过设置它我们可以指定插件编译、打包时的一些特性
+             user_key       :  project/module自定义的key，如依赖包的版本号等
+        -->
+        <predefined_key>value</predefined_key>
+        <user_key>value</user_key>
+    </properties>
+
+
+    <!-- <dependencyManagement>
+         统一声明依赖，主要在parent POM中定义
+         声明的依赖不会自动引用，还需要在<dependencies>下显示引用
+    -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>xxx</groupId>
+                <artifactId>xxx</artifactId>
+                <version>xxx</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+
+    <!-- <dependencies>
+         管理project/module的外部依赖
+    -->
+    <dependencies>
+        <dependency>
+            <!--依赖包在Maven仓库中的坐标-->
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.11</version>
+
+            <!--默认是jar，一般不用设置-->
+            <type>jar</type>
+
+            <!--指定依赖的范围(在范围内才会被添加进classpath)
+                compile     - 默认值，in the all classpath(compile、test、runtime)
+                provided    - in the compile、test classpath。意味着运行时由JDK或容器提供
+                runtime     - in the runtime & test classpath
+                test        - only in the test classpath
+                system      - 类似provided，但必须提供jar的位置，maven不会去仓库搜索
+            -->
+            <scope>test</scope>
+            <!-- only valid when scope is system-->
+            <systemPath>${some path}</systemPath>
+
+            <!--marks optional a dependency when this project itself is a dependency.
+                e.g, project A depends on B to compile some functions.
+                but these funcions may not be used at runtime,then A can mark B as optional,
+                and when C depends on A, maven will provide A without including B.
+            -->
+            <optional>true</optional>
+
+            <!--手工排除间接依赖，主要用于多个直接依赖的间接依赖存在冲突的情况
+            -->
+            <exclusions>
+                <exclusion>
+                    <!-- 排除指定依赖，可以用*来排除所有依赖 -->
+                    <groupId>xxx</groupId>
+                    <artifactId>xxx</artifactId>
+                </exclusion>
+            </exclusions>
+
+        </dependency>
+    </dependencies>
+
+
+    <!-- <repositories><pluginRepositories>
+         指定依赖/插件的远程仓库
+         如需要验证信息，在settings文件中的server元素配置
+    -->
+    <repositories>
+        <repository>
+            <!--远程仓库的唯一标识-->
+            <id>repo_id</id>
+            <name>repo_name</name>
+
+            <!--远程仓库URL，以'protocol://hostname/path'的形式指定-->
+            <url>http://snapshots.maven.codehaus.org/maven2</url>
+
+            <!-- <release> <snapshots>
+                用于处理发布版本/快照版本的下载，见下面
+            -->
+            <snapshots>
+                <!-- true|false 表示该仓库是否为下载发布版本或快照版本开启，默认是true -->
+                <enabled>true</enabled>
+
+                <!-- 检查依赖更新的频率，maven会比较本地POM和远程POM的时间戳
+                     always       - 每次构建都会去检查远程仓库是否更新
+                     daily        - 每天检查一次，默认值
+                     interval:X   - 以X分钟为间隔检查
+                     never        - 从不检查
+                -->
+                <updatePolicy>always</updatePolicy>
+
+                <!-- 当maven验证构件校验文件失败时怎么处理
+                     ignore       - 忽略
+                     fail         - 失败
+                     warn         - 警告，默认值
+                -->
+                <checksumPolicy>warn</checksumPolicy>
+            </snapshots>
+
+            <!--可选，用于兼容maven 1.x。maven 2&3都是默认布局
+                default|legacy
+            -->
+            <layout>default</layout>
+        </repository>
+    </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>repo_id</id>
+            <name>repo_name</name>
+            <url>repo_url</url>
+        </pluginRepository>
+    </pluginRepositories>
+
+
+    <!-- <distributionManagement>
+         指定project需要deploy的远程仓库，如需要验证信息，在settings文件中的server元素配置(通过id引用)
+         可以设置release仓库和snapshot仓库
+    -->
+    <distributionManagement>
+        <repository>
+            <id>repo_id</id>
+            <name>repo_name</name>
+            <url>repo_url</url>
+        </repository>
+        <snapshotRepository>
+            <id>repo_id</id>
+            <name>repo_name</name>
+            <url>repo_url</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+
+    <!-- <build>
+         定义项目构建阶段的行为：
+         1. 声明、引用plugin
+         2. 配置各种默认路径(按照约定则无需更改)
+    -->
+    <build>
+        <!-- <pluginManagement>
+             统一声明plugin，主要用于parent pom，方便module灵活引用和覆盖
+             声明的plugin不会自动出现在<build><plugins>...下，需要显式引用
+        -->
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <artifactId>maven-clean-plugin</artifactId>
+                    <version>3.0.0</version>
+                    <inherited>false</inherited>
+
+                    <configuration>
+
+                    </configuration>
+
+                    <executions>
+
+                    </executions>
+
+                    <goals/>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <!-- <plugins>
+             引用plug，已经声明过又无需更改配置的plug，可以只列出artifactId
+        -->
+        <plugins>
+            <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
+            </plugin>
+        </plugins>
+
+    </build>
+
+
+    <!--
+    -->
+    <reporting>
+        <plugins>
+
+        </plugins>
+    </reporting>
+
+
+    <!--
+    -->
+    <reports/>
+</project>

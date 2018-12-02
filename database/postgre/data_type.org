@@ -1,0 +1,60 @@
+* Numeric Types
+** Serial
+The data types smallserial, serial and bigserial are not true types, but merely a notational convenience for creating unique identifier columns (similar to the AUTO_INCREMENT property supported by some other databases). In the current implementation, specifying:
+
+#+BEGIN_EXAMPLE
+CREATE TABLE tablename (
+    colname SERIAL
+);
+
+等价于
+
+CREATE SEQUENCE tablename_colname_seq;
+CREATE TABLE tablename (
+    colname integer NOT NULL DEFAULT nextval('tablename_colname_seq')
+);
+ALTER SEQUENCE tablename_colname_seq OWNED BY tablename.colname;
+#+END_EXAMPLE
+
+在insert时，不指定id或者使用default值，则会自动从序列获取值
+
+* Character Types
++ character varying(n), varchar(n)
+  variable-length with limit
++ character(n), char(n)
+  fixed-length, blank padded
++ text
+  variable unlimited length
+
+ 
+* Boolean
+| boolean | 1 byte | state of true or false |
+
+The boolean type can have several states: “true”, “false”, and a third state, “unknown”, which is represented by the SQL null value.
+
+insert 时有效的字符
+| TRUE   | FALSE   |
+| 't'    | 'f'     |
+| 'true' | 'false' |
+| 'y'    | 'n'     |
+| 'yes'  | 'no'    |
+| 'on'   | 'off'   |
+| '1'    | '0'     |
+
+#+BEGIN_EXAMPLE
+CREATE TABLE test1 (a boolean, b text);
+INSERT INTO test1 VALUES (TRUE, 'sic est');
+INSERT INTO test1 VALUES (FALSE, 'non est');
+SELECT * FROM test1;
+ a |    b
+---+---------
+ t | sic est
+ f | non est
+
+SELECT * FROM test1 WHERE a;
+ a |    b
+---+---------
+ t | sic est
+#+END_EXAMPLE
+
+* 

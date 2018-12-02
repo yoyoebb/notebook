@@ -1,0 +1,7 @@
+字符集及编码
+javac -encoding utf-8 Test.java
+告诉JVM，java文件是基于什么编码格式(不指定则使用系统编码)，编译的时候将对应字符集转换成unicode，并以UTF-8的方式存储在class文件中
+
+java -Dfile.encoding=UTF-8 com.ebb.j2se.Hello
+在运行时，指定unicode转换为byte时的默认编码
+当字符串输出为字节时且没有指定字符集时，将按照默认编码将unicode(UTF-16)转换为对应编码的字节

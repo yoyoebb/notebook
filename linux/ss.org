@@ -1,0 +1,26 @@
+SS（104.225.156.3）
+---server---
+yum install python-setuptools
+
+##将http替换成https
+sed --in-place 's#http://pypi.python.org#https://pypi.python.org#g' /usr/lib/python2.6/site-packages/setuptools/command/easy_install.py
+
+easy_install pip
+
+pip install shadowsocks
+
+##配置SS服务
+vi /etc/shadowsocks.json
+##配置开机启动
+vi /etc/rc.local
+
+ssserver -c /etc/shadowsocks.json -d start/stop/restart
+
+##查看服务有没有启动
+ps -aux | grep 'ssserver'
+
+##查看系统服务
+service  --status-all
+
+----mac pro---
+安装ssx客户端，填写服务器信息，更新PAC，重启浏览器

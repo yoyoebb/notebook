@@ -1,0 +1,31 @@
+* Array
+Java中，数组是一组相同类型值或对象的集合，它分为基本类型数组和引用类型数组，数组的具体元素存储在Heap内存中，而Stack上保存的是其引用变量。
+#+BEGIN_SRC java 
+// declare array
+int[] aryInt ;
+Object [] aryObj ;
+
+// initialize
+// 数组的长度在初始化之后就固定了，通过length属性可以获取其长度
+aryInt = new int[5] ;     // aryInt指向一个大小为5的int数组，其元素初始值为0
+aryInt = new int[x] ;     // 数组长度在运行时由x的值决定
+aryInt = {1,2,3,4,5} ;    
+aryInt = new int[]{1,2,3,4,5} ;
+
+
+// 遍历数组，数组长度为length属性，索引的范围：0<=index<length，支持foreach循环
+int[] a = new int[5] ;
+for(int i=0; i<a.length; i++){
+  ...
+}
+
+// 复制数组，常用于扩充数组大小
+// newLength为target的长度，当超过source.length时，超出部分按类型赋默认值。
+int[] target = Arrays.copyOf(source, newLength) ;
+#+END_SRC    
+
+数组的长度是固定了，如果我们不知道要保存的元素数量，可以使用ArrayList
+
+* Collection
+
+* Map

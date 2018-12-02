@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <!-- <properties>
+         声明参数，这些参数被用于其他配置项中动态引用
+         参数可以由多个阶段传入，先后顺序如下：
+             1. 子标签<property />中定义的参数
+             2. "resource"属性中指定的标准java properties文件中引入
+             3. Build SqlSessionFactory时的工厂方法参数传入
+         如果有同名的key，会按3-2-1的顺序往前覆盖
+     -->
+    <properties resource="org/mybatis/example/config.properties">
+        <property name="username" value="dev_user"/>
+        <property name="passowrd" value="F2Fa3!33TYyg"/>
+
+        <!-- 从3.4.2开始，可以在引用参数的时候指定默认值，当参数没有定义时使用
+             e.g. ${username:ut_user}，假如"username"没有定义，直接使用ut_user作为其值
+             这个功能默认是关闭的，需要指定内部参数来打开
+        -->
+        <property name="org.apache.ibatis.parsing.PropertyParser.enable-default-value" value="true"/>
+        <!-- 参数和默认值使用':'分割，也可以设置不同的分隔符来避免冲突
+             e.g. ${user:name?:ut_user}   user:name作为参数Key，?:作为默认值分隔符
+        -->
+        <property name="org.apache.ibatis.parsing.PropertyParser.default-value-separator" value="?:"/>
+    </properties>
+
+
+    <!-- <settings>
+         框架运行时特性的开关，具体参考mybatis.org
+    -->
+    <settings>
+        <setting name="xxx" value="xxx"/>
+    </settings>
+
+
+    <!-- <typeAliases>
+         为Java Class指定别名，在配置文件中就可以通过别名引用对应的class
+         mybatis为很多基本类型生成了默认的别名，具体参考mybatis.org
+    -->
+    <typeAliases>
+        <typeAlias alias="Blog" type="domain.blog.Blog"/>
+
+        <!-- <package>
+             mybatis自动扫描指定package，如果：
+             1. 存在@Alias("aliasName") 注解的类，则以"aliasName"自动为该类生成别名
+             2. 没有@Alias注解的类，则以全小写的类名自动为该类生成别名
+        -->
+        <package name="domain.blog"/>
+    </typeAliases>
+
+
+    <!-- <typeHandlers>
+         当为PreparedStatement指定参数或从ResultSet获取返回值时，typeHandler会负责进行JdbcType - java type之间的类型转换
+         mybatis定义了很多默认的typeHandler，参考mybatis.org
+         如果你想覆盖系统默认实现：
+         1. 实现org.apache.ibatis.type.TypeHandler 或 继承org.apache.ibatis.type.BaseTypeHandler
+         2. 在config文件中配置对应的handler
+
+         系统会按照3-2-1的优先级确定对应的java type
+         1. 在实现接口或继承父类时指定了范型类型，则系统默认对应的范型类型为java type
+         2. 可以通过类注解 @MappedTypes
+         3. 声明一个"javaType"的字符串属性，e.g javaType="String"
+
+         系统会按照2-1的优先级确定对应的JdbcType
+         1. 通过类注解 @MappedJdbcTypes(JdbcType.xxx) 指定需要覆盖的类型
+         2. 声明一个"jdbcType"的字符串属性，e.g jdbcType="VARCHAR"
+    -->
+    <typeHandlers>
+        <typeHandler handler="org.mybatis.example.ExampleTypeHandler"/>
+    </typeHandlers>
+
+
+    <!-- <objectFactory>
+         Mybatis利用ObjectFactory来为返回类型创造实例，默认使用DefaultObjectFactory
+         通过这个配置可以指定个性化的ObjectFactory
+    -->
+    <objectFactory type="org.mybatis.example.ExampleObjectFactory">
+        <property name="someProperty" value="100"/>
+    </objectFactory>
+
+
+    <!-- <plugins>
+         Mybatis提供了拦截器钩子，可以拦截
+         1. Executor (update, query, flushStatements, commit, rollback, getTransaction, close, isClosed)
+         2. ParameterHandler (getParameterObject, setParameters)
+         3. ResultSetHandler (handleResultSets, handleOutputParameters)
+         4. StatementHandler (prepare, parameterize, batch, update, query)
+    -->
+    <plugins>
+        <plugin interceptor="org.mybatis.example.ExamplePlugin">
+            <property name="someProperty" value="100"/>
+        </plugin>
+    </plugins>
+    
+    
+    <!-- <environments>
+         出于很多原因，如在配置中为开发、测试、生产指定不同的数据库，或者需要同时访问多个数据库，Mybatis允许配置多个环境(db)
+         但构造SqlSessionFactory只能对应一个环境(db)，如果没有指定则使用default environment
+    -->
+    <environments default="development">
+        <environment id="development">
+            <!-- <transactionManager>
+                 配置事务管理器，type = JDBC | MANAGED
+                 JDBC，默认set autocommit to false
+                 无需配置，通常都是使用spring来管理事务
+            -->
+            <transactionManager type="JDBC">
+                <property name="..." value="..."/>
+            </transactionManager>
+
+            <!-- <dataSource>
+                 配置dataSource，通过指定type = UNPOOLED | POOLED | JNDI 来使用内置的DataSource
+                 如果要使用第三方的DataSource，需要实现接口org.apache.ibatis.datasource.DataSourceFactory，然后在type属性中指定
+            -->
+            <dataSource type="POOLED">
+                <!-- property for UNPOOLED / POOLED dataSource-->
+                <property name="driver" value="${driver}"/>
+                <property name="url" value="${url}"/>
+                <property name="username" value="${username}"/>
+                <property name="password" value="${password}"/>
+                <property name="defaultTransactionIsolationLevel" value="${...}"/>
+                <property name="driver.encoding" value="xxx"/>  <!--传给driver的参数-->
+                
+                <!-- property only for POOLED dataSource -->
+                <property name="poolMaximumActiveConnections" value="..."/>
+                <property name="poolMaximumIdleConnections" value="..."/>
+                <property name="poolMaximumCheckoutTime" value="..."/>
+                <property name="poolTimeToWait" value="..."/>
+                <property name="poolMaximumLocalBadConnectionTolerance" value="..."/>
+                <property name="poolMaximumIdleConnections" value="..."/>
+                <property name="poolMaximumLocalBadConnectionTolerance" value="..."/>
+                <property name="poolPingQuery" value="..."/>
+                <property name="poolPingEnabled" value="..."/>
+                <property name="poolPingConnectionsNotUsedFor" value="..."/>
+                
+                <!-- property only for JNDI dataSource -->
+                <property name="initial_context" value="..."/>
+                <property name="data_source" value="..."/>
+                <property name="env.encoding" value="..."/>  <!-- 传给initial_context的参数-->
+            </dataSource>
+        </environment>
+    </environments>
+
+
+    <!-- <databaseIdProvider>
+
+    -->
+    <databaseIdProvider type="DB_VENDOR">
+        <property name="SQL Server" value="sqlserver"/>
+        <property name="DB2" value="db2"/>
+        <property name="Oracle" value="oracle" />
+    </databaseIdProvider>
+
+
+    <!-- <mappers>
+         引入指定路径的mapper xml files
+    -->
+    <mappers>
+        <!-- 1. Using classpath relative resources -->
+        <mapper resource="org/mybatis/builder/AuthorMapper.xml"/>
+        <!-- 2. Using url fully qualified paths -->
+        <mapper url="file:///var/mappers/AuthorMapper.xml"/>
+        <!-- 3. Using mapper interface classes
+             如果同路径下存在同名.xml文件，mybatis也会auto load
+        -->
+        <mapper class="org.mybatis.builder.AuthorMapper"/>
+        <!-- 4. Register all interfaces in a package as mappers -->
+        <package name="org.mybatis.builder"/>
+    </mappers>
+</configuration>
