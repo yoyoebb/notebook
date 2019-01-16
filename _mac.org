@@ -1,0 +1,70 @@
+* common operation
+** finder
+在finder中toggle隐藏目录的快捷键是 ~'Shift + Command + .'~
+
+* pacakge management
+** homebrew
+    
+
+* java dev env set-up
+** jdk
+** maven
+** idea
+
+* server-side env set-up
+** docker
+*** 安装和初始体验
+   1. install
+      ~$brew cask install docker~
+      
+   2. 检查docker的版本
+      ~$docker --version~   summary
+      ~$docker version~     detail
+
+   3. 镜像加速
+      Perferences -> Daemon -> Registry mirrors，在列表中填上镜像地址，apply&restart
+      ~$docker info~ 可以查看镜像配置是否成功
+      部分国内镜像：
+      + 阿里云 'https://kfwkfulq.mirror.aliyuncs.com'
+      + 网易   'http://hub-mirror.c.163.com'
+
+   4. hello world (国际惯例)
+      ~$docker run hello-world~ 
+      会演示获取image和运行container的基本流程
+      1. 判断本地有无指定image，如果没有，则从docker hub下载并在本地缓存
+      2. 基于image运行container
+
+*** image cmd
+    1. search image from repository
+       ~$docker search oracle~
+    2. pull image from repository
+       ~$docker pull xxxx~
+       
+      
+      
+      
+** tomcat
+** oracle
+*** init local instance (docker)
+    1. pull oracler 11g的docker镜像（11.0.2 64bit EE，instance:helowin），若本地已经存在直接跳过
+       ~$docker pull registry.cn-hangzhou.aliyuncs.com/helowin/oracle_11g~
+    2. 创建并启动容器(映射1521端口)
+       ~$docker run --name oracle -p 1521:1521 -d registry.cn-hangzhou.aliyuncs.com/helowin/oracle_11g~
+    3. 进入容器并加载环境变量
+       ~$docker exec -it #id# /bin/bash~
+
+       ~#source /home/oracle/.bash_profile~
+    4. 登录sqlplus (root : helowin)
+       #+BEGIN_EXAMPLE
+       #sqlplus /nolog
+
+       sql>connect /as sysdba
+       #+END_EXAMPLE
+*** 持久化数据(volume)
+*** mac client
+    1. idea plugin : database navigator
+       失败！插件动不动就卡死
+    2. sql developer
+    3. toad for mac 破解版
+    4. 虚拟机win->pl/sql developer
+** jerkins

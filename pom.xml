@@ -10,6 +10,7 @@
   <version>1.0</version>
   <modules>
     <module>xjava</module>
+    <module>xspringboot</module>
   </modules>
 
   <name>notebook</name>

@@ -17,8 +17,8 @@
     <url>http://www.example.com</url>
     <modules>
         <module>core</module>
-        <module>web</module>
         <module>dao</module>
+        <module>web</module>
     </modules>
 
     <properties>
