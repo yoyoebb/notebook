@@ -11,50 +11,11 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
-/**
- *   Java SE 8之前的时间API
- *   java.util.Date                      精确到毫秒的UST时间
- *        java.sql.Date                  写入db，或者从db读回来时只包含年月日(由jdbc driver保证)
- *        java.sql.Time                  写入db，或者从db读回来时只包含年月日(由jdbc driver保证)
- *        java.sql.Timestamp             精确到毫秒，也支持纳秒(需要作为构造方法参数传进去)
- *   java.util.Calendar                  抽象类，通过Date获取日历坐标，进行日历操作
- *        java.util.GregorianCalendar    代表格列高利历(即通用的标准日历)
- *   java.util.TimeZone
- *   java.text.DateFormat                抽象类，对Date进行format
- *        java.text.SimpleDateFormat
- */
+
 public class ShowDateOld {
 
-    /**
-     *  java.util.Date : The class Date represents a specific instant in time, with millisecond precision
-     *  Date底层其实就存储了一个long类型的毫秒值，这个毫秒表示距离1970年1月1号00时00分00秒 (UTC) 的毫秒差
-     *  long代表的毫秒数并不考虑时区，只有当把date格式化输出，或者toString()时，系统才会调用os对应时区，格式化为当前时区的时间
-     *
-     *  标准库的时间类设计的非常失败，被广为诟病。这也是为什么Joda Time在Java日期/时间需求中扮演了高质量替换的重要角色
-     *   1. 所有的时间类都是mutable，没有线程安全，作为参数传递时也需要防御式编程，传递副本
-     *   2. java.sql.Date唯一需要用到的地方就是PreparedStatement.setDate()，其他时候都可以被java.util.Date取代
-     *   3. java.util.Date及其子类都是标准化时间，没有考虑国际化和时区
-     *
-     *   由于这些原因，java.util.Date及其子类的很多直接获取年/月/日/时/分/秒的方法都被废弃，
-     *   需要使用Calendar来代替，可惜的是，Calendar同样是个奇葩
-     */
     public static void showDate(){
-        // 题外话，System类中提供了两个获取时间的方法
-        long currentTime = System.currentTimeMillis();    // 返回当前时间，精度到毫秒
-        long currentNanoTime = System.nanoTime();         // 多了6位纳秒
-
-        // 获取当前时间，底层调用的 new Date(System.currentTimeMillis())
-        Date currentDate = new Date();
-        // 通过Long类型数字设置指定时间，基于1970年1月1号00时00分00秒 (UTC)
-        Date assignedDate = new Date(-1000);
-
-        // toString方法，基于内部的Calendar实现，返回的是对应当前时区的字符串，格式：dow mon dd hh:mm:ss zzz yyyy
-        // dow 星期几           mon  月份              dd  当月第几天(01-31)
-        // hh  小时(00-23)      mm   分钟(00-59)       ss  秒(00-61)
-        // zzz 时区zone         yyyy 4位数字的年份
-        LoggerUtils.LOGGER.debug("Date.toString() : {}",currentDate);    //Thu Aug 23 11:54:29 CST 2018
-        LoggerUtils.LOGGER.debug("Date.toString() : {}",assignedDate);   //Thu Jan 01 07:59:59 CST 1970
-    }
+        }
 
     /**
      *  SimpleDateFormat : 业务系统很少用Date默认字符串来表示时间，可以用此类来按需格式化Date
