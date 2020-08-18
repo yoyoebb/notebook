@@ -110,10 +110,72 @@
        V$NLS_PARAMETERS     查看语言、字符集、日期格式等设置
        #+END_EXAMPLE
     
+** session
+   #+BEGIN_SRC sql
+   --按用户查看当前生效的session
+   select OSUSER,count(*) from v$session
+   where PROGRAM='plsqldev.exe'
+   group by OSUSER
+   order by 2 desc;
+   #+END_SRC
 * schema objects
 ** table
+*** 常用SQL
+   #+BEGIN_SRC sql
+     -- CTAS
+     create table T1 as select * from T2 ;
+
+     -- alter table add column
+     alter table T1 add (column_name datatype [])
+
+     -- 清空表
+     truncate TABLE 表名;
+   #+END_SRC
+** temporary table 
+*** 常用SQL
+   #+BEGIN_SRC sql 
+     --创建临时表
+     CREATE GLOBAL TEMPORARY TABLE 表名
+     (...) on commit preserve rows;   -- 会话级别的临时表，在同会话中commit后仍然保留数据
+
+     CREATE GLOBAL TEMPORARY TABLE 表名
+     (...) on commit delete rows;     -- 事务级别的临时表，每次commit后删除数据
+
+     -- 查看用户schema下的临时表
+     select * from user_tables t where t.TEMPORARY='Y'
+
+   #+END_SRC
+** sequence
+*** 常用SQL
+   #+BEGIN_SRC sql
+     CREATE SEQUENCE 序列名(通常命名为SEQ_XXX)
+	 [INCREMENT BY n]         -- 定义序列的步长，如果省略，则默认为1，如果负值则代表按照此步长递减
+	 [START WITH n]           -- 定义序列的初始值(即产生的第一个值)，默认为1
+	 [{MAXVALUE/MINVALUE n| NOMAXVALUE}]   --定义序列的极值
+	 [{CYCLE|NOCYCLE}]        -- 超过极值后是否循环
+	 [{CACHE n| NOCACHE}];    -- 是否缓存，新增记录频繁时用于提高性能
+   #+END_SRC
+
+1、直接drop sequence seq_t_test;然后重新创建并且设置序列的初始值为希望的数据
+
+SQL:
+drop sequence seq_t_test;
+create sequence seq_t_test;
+increment by 1
+start with 1//你想要的值
+maxvalue 999999999;
+
+2、修改序列的每次增加的值，然后再修改回每次自增1
+
+比如将每次只自增1修改为99这样，做一次nextval也能得到预想的值，然后再将每次自增再次修改为1;
+SQL:
+alter sequence seq_t_test increment by n;? ? ?//n为做自增能够达到预想的值
+做一次select seq_t_test.nextval from dual;
+再将序列的值修改回去alter sequence seq_t_test increment by 1;
 
 
+* oracle的特性
+** TODO 待归纳
 服务器端：
 NLS_DATABASE_PARAMETERS	服务器环境参数（语言、地区、日期格式、字符集。。。）
 V$NLS_VALID_VALUES	支持的LANGUAGE 、TERRITORY、CHARACTERSET
@@ -141,22 +203,109 @@ ascii(字符) 字符转为数字。 返回字符（字符串则是首字符）�
 CHR(数字)   数字转为字符，ascii的反函数
 asciistr(字符串)  对字符串进行转换，如果有非ascii码字符('\'除外，它会被转为'\005C')，转为\XXXX 的形式，XXXX是对应的十六进制值 select ASCIISTR('a串') from dual ; --> 'a\4E32'
 
-
-* oracle的特性
-*** jdbc支持
+** jdbc支持
     JDBC连接ORACLE的两种方式：THIN、OCI
     ~jdbc:oracle:thin:@youroraclehost:1521:yoursid~
     ~jdbc:oracle:oci:@youroracle-tns-name~
-*** rowid和rownum
+** rowid和rownum
     + rowid
       oracle的table中，每行数据都有一个隐藏的18位字符长度标识符列(rowid)，代表了该行在oracle中的物理地址。
-      #+BEGIN_EXAMPLE
+      #+BEGIN_SRC sql
       select rowid, job, uname from emp
-      #+END_EXAMPLE
-    + rownum
+      #+END_SRC
 
-*** build-in function
-**** 字符类
+    + rownum
+      根据查询结果集生成的伪列(行号标识)，注意，rownum是基于结果集的rowid排序，order by 子句不会影响rownum的顺序。
+      由于是基于结果集生成，where中使用时会有一些限制
+      + 通常使用 '<, <=' 来筛选记录
+      + 也可以使用 '!='，如 rownum !=10 ,等价于 rownum < 10
+      + 也可以使用 between，但要包含1，如 rownum between 0/1 and 10 ,等价于 rownum <=10
+      #+BEGIN_SRC sql
+      select * from emp where rownum < 10
+      #+END_SRC
+
+    + row_number()函数
+      因为rownum排序的特点(基于rowid)，oracle额外提供了按照其他规则来排序的row_number()函数，有两种用法:
+      - 统一排序
+        row_number() over (order by col_1[,col_2 ...])
+      - 分区排序
+	row_number() over (partition by col_n[,col_m ...] order by col_1[,col_2 ...])
+** Query
+**** 多column in
+   #+BEGIN_SRC sql
+     select * from T1 where (C1, C2) in (select C1,C2 from T2)
+   #+END_SRC
+**** with as语法
+   通过with as可以创建临时表，在紧接着的select语句中复用。 
+   优点：增加了SQL的易读性，如果构造了多个子查询，结构会更清晰；更重要的是：“一次分析，多次使用”
+   注意：1. with必须紧跟引用的select语句; 2. with创建的临时表必须被引用，否则报错
+   #+BEGIN_SRC sql
+     with
+     TT1 as (select ...)
+     [, TT2 as (select ...)]
+     select *
+     from TT1
+     ...
+   #+END_SRC
+**** TODO 行转列函数pivot()
+**** 多行合并为一行 listagg(...) within group(...)
+     #+BEGIN_SRC sql
+       -- 普通条件查询，部门为20的员工
+       select t.DEPTNO, t.ENAME FROM SCOTT.EMP t where t.DEPTNO='20';    --返回多行记录
+
+       -- 将多行部门相同的员工记录合并为一行记录返回，通过','联接不同的ENAME'
+       select t.DEPTNO, listagg(t.ENAME, ',') within group(order by t.ename) names
+	 from SCOTT.EMP t
+	where t.DEPTNO = '20'
+       group by t.DEPTNO
+
+       -- 返回多行记录，但每一行的员工记录都是多行的合并，这时候不需要group by子句
+       select t.DEPTNO, listagg(t.ENAME, ',') within group(order by t.ename) over(partition by t.DEPTNO) names
+	 from SCOTT.EMP t
+	where t.DEPTNO = '20'
+     #+END_SRC
+**** 分区查询
+** NULL比较
+          | null = null      | F | 1 = null      | F |
+          | null <> null     | F | 1 <> null     | F |
+          | null is null     | T | 1 is null     | F |
+          | null is not null | F | 1 is not null | T |
+   oracle 中 '' 等价于 null
+** DML(update/insert/delete)
+*** merge into 语法
+     #+BEGIN_SRC sql
+     merge into 目标表 a 
+     using 源表 b 
+        on(a.条件字段1=b.条件字段1 and a.条件字段2=b.条件字段2 ……)     --必须有括号
+      when matched then update set a.字段1=xxx,... 
+      when not matched then insert(字段1,字段2……)values(值1,值2……)     --
+     #+END_SRC    
+*** sequence手工调整
+    oracle从不同环境复制数据时，可能会需要手工处理sequence
+    #+BEGIN_SRC sql
+    -- 查看系统当前值
+    SELECT * FROM USER_SEQUENCES WHERE SEQUENCE_NAME like 'SEQ_QDII_CUSCFG%';
+
+    -- 根据实际的max id 和当前序列值，调整序列的增量值
+    alter sequence SEQ_QDII_CUSCFG_CASHFILTER increment by 1;
+    -- 翻动sequence
+    select SEQ_QDII_CUSCFG_CASHFILTER.NEXTVAL from dual;
+    #+END_SRC
+*** insert into values一次插入多条数据
+    oracle不支持insert into tablename(col1,...) value(col1,...),(col1,...)
+    #+BEGIN_SRC sql
+      insert all 
+       into jack_20170206_aa values('4014033')
+       into jack_20170206_aa values('4065304')
+       into jack_20170206_aa values('4088136')
+       into jack_20170206_aa values('4092405')
+      select 1 from dual;
+    #+END_SRC
+** 权限相关
+**** 查看用户下的对象授权其他用户的信息
+   SELECT * FROM user_tab_privs_made
+* build-in function
+** 字符类
     #+BEGIN_EXAMPLE
     -- 字符和编码值
     select ASCII(‘汉’) from dual;       //15118729
@@ -180,19 +329,32 @@ asciistr(字符串)  对字符串进行转换，如果有非ascii码字符('\'�
     REPLACE(s1,s2[,s3])
     使用s3(默认为空格)替换s1中的所有s2
     #+END_EXAMPLE
-**** 数字类
+** 数字类
     #+BEGIN_EXAMPLE
     ABS(n)
     CEIL/FLOOR(n)
     ROUND(n1,n2)
     #+END_EXAMPLE
-**** 日期时间类
+** 日期时间类
     日期默认格式是'DD-MON-YY'
     #+BEGIN_EXAMPLE
     SYSDATE()          返回系统当前日期
     ADD_MONTHS(d,i)    返回日期d加上i个月之后的结果 
     #+END_EXAMPLE
-**** 转换类
+** 类型转换类
+1. 时间戳字段转日期字符串
+   TO_CHAR(timestamp, 'YYYY-MM-DD')
+
+** instr()  
+   instr(strA, strB [,start_position [,nth_appearance]] )，在strA中查找strB的位置，可以替代in, like
+   
+   #+BEGIN_SRC sql
+   select * from tableName where name like '%helloworld%';    --传统的like
+   select * from tableName where instr(name,'helloworld')>0;  --效果是一样的
+   
+   #+END_SRC
+** decode() --case when的简化版本
+    DECODE(value,if1,then1,if2,then2,if3,then3,...,else)
 * PL/SQL
 ** Block
     PL/SQL以Block为单位编写和编译，其语法如下：
@@ -238,7 +400,9 @@ asciistr(字符串)  对字符串进行转换，如果有非ascii码字符('\'�
 
 *** Date
     
-    
+** CALL    
+*** CALL SP, 参数=>
+  相当于=号。exec test（变量名=>值,...）这样写 括号里的变量顺序可以改变，无需按申明顺序。
 * best pratics
 ** 业务主键 or 逻辑主键
     使用逻辑主键的主要原因是，业务主键一旦改变则系统中关联该主键的部分的修改将会是不可避免的，并且引用越多改动越大。而使用逻辑主键则只需要修改相应的业务主键相关的业务逻辑即可，减少了因为业务主键相关改变对系统的影响范围。业务逻辑的改变是不可避免的，因为“永远不变的是变化”，没有任何一个公司是一成不变的，没有任何一个业务是永远不变的。最典型的例子就是身份证升位和驾驶执照号换用身份证号的业务变更。而且现实中也确实出现了身份证号码重复的情况，这样如果用身份证号码作为主键也带来了难以处理的情况。当然应对改变，可以有很多解决方案，方案之一是做一新系统与时俱进，这对软件公司来说确实是件好事。

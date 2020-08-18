@@ -197,3 +197,16 @@ Struts
 
 Test	spring-test
 
+
+首先请确保Spring版本为3.2.4
+
+问题1：使用@ResponseBody注解，返回对象类型时，如Map，中文字符，在客户端会显示为???
+
+解决办法：请检查依赖jar包，确保spring-context-support.jar的版本也是3.2.4，则可显示中文；
+
+
+
+问题2：使用@ResponseBody注解，返回String时，中文字符，在客户端会显示为???，并且contextType中会缺失encoding值，即为text/html但是，没有后面的encode
+
+解决办法：首先需要知道，在spring3.2以后，@RequestMapping使用了RequestMappingHandlerAdapter来处理请求，对于@ResponseBody，当为string时，会调用默认构造方法里面add的StringHttpMessageConverter，需要注意的是，这个converter默认的编码是“ISO-8859-1”，中文的大敌啊，而且这个converter是new出来的，因此无法采用替代注入的方式，而只能注入messageConverters，因此，我们需要重新申明一个RequestMappingHandlerAdapter，如下：
+

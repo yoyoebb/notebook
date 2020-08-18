@@ -1,5 +1,5 @@
 * Emacs
-+ Emacs是一个非常强大的定制化系统，它的底层其实就是ELISP函数，系统预定义了大量的hot-key来调用相应的函数，这些快捷键遵循如下规则：
++ Emacs是一个非常强大的定制化系统，它的底层是ELISP函数，系统预定义了大量的hot-key来调用相应的函数，这些快捷键遵循如下规则：
   + 最常用的功能，使用: ~C+?~ ~M+?~
   + 次常用的功能，使用: ~C+lead+?~  ~M+lead+?~
   + 很少用的功能，使用: ~C+lead C+?~
@@ -102,6 +102,11 @@ Emacs通过Major Mode来分别处理不同类型的文件，通过Minor Mode来�
    --------------------------------------------------------
    undo           C-/          撤销上一次操作(可重复)
    redo                             
+   --------------------------------------------------------
+   search         C-s          swiper增强
+   replace        M-%          询问替换 (从光标位置往下查询，逐个确认)
+                  M-x replace-string   字符串替换 
+                  M-x replace-regexp   正则表达式替换
    #+END_EXAMPLE   
 ** Hack Emacs by ELisp
 *** Elisp语法
@@ -123,6 +128,10 @@ Emacs通过Major Mode来分别处理不同类型的文件，通过Minor Mode来�
     + M-x eval-buffer  执行当前缓冲区的所有Lisp命令
     + C-x C-e  执行光标所在的Lisp函数(如果要执行整行，光标必须放在最后面)
 
+** start as a server
+   在启动配置中添加 :  (server-start)
+   Windows下添加注册表项, "HKEY_CLASSES_ROOT\*\shell\Edit with Emacs\command", 并将其default值设为 "path\to\emacsclientw.exe" --no-wait --alternate-editor="path\to\runemacs.exe" "%1"
+   
 * Org
 ** Structure
 我们将org中的heading、plain list、table视为通用结构。

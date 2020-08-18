@@ -1,6 +1,3 @@
-#+SETUPFILE: ~/.emacs.d/org-templates/level-2.org
-#+TITLE: Maven
-
 * Maven介绍
   Maven是目前Java界主流的项目构建工具，利用它可以完成创建工程目录、管理外部依赖、编译、测试、发布等一系列工作。Maven做的最好的就是管理外部依赖包。
 
