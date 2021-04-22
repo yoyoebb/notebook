@@ -17,7 +17,7 @@
     <properties>
         <!-- data base driver & orm-->
         <v.postgresql>42.2.4</v.postgresql>
-        <v.org.mybatis>3.4.6</v.org.mybatis>
+        <v.org.mybatis>3.5.6</v.org.mybatis>
         <v.alibaba.druid>1.1.10</v.alibaba.druid>
     </properties>
 
